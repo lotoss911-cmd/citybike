@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0d0c">
+<title>Электровелосипед под ключ · Новосибирск</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0b0d0c; --card:#141816; --card2:#1a201d; --line:#26302b;
+  --text:#eef4f0; --dim:#9fb0a8; --mute:#6d7d75;
+  --lime:#c6ff3d; --lime-dark:#8fd400; --green:#3ddc84;
+  --amber:#ffc247; --red:#ff5d6c; --r:16px;
+}
+html,body{background:var(--bg);color:var(--text);font:400 15px/1.45 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+body{padding:0 0 40px;overflow-x:hidden}
+.wrap{max-width:760px;margin:0 auto;padding:0 14px}
+
+header{padding:18px 0 10px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:12px}
+.mark{width:44px;height:44px;border-radius:12px;background:linear-gradient(145deg,var(--lime),var(--lime-dark));display:grid;place-items:center;color:#0b0d0c;font-weight:900;font-size:20px;flex:none}
+.brand h1{font-size:17px;font-weight:800;letter-spacing:.02em;line-height:1.15}
+.brand .sub{font-size:11.5px;color:var(--mute);letter-spacing:.12em;text-transform:uppercase;margin-top:3px}
+.addr{margin-top:12px;font-size:12.5px;color:var(--dim);line-height:1.45}
+.addr b{color:var(--text)}
+
+.tabs{display:flex;gap:8px;margin-top:14px;background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:5px}
+.tab{flex:1;padding:10px;border-radius:10px;border:0;background:transparent;color:var(--dim);font:700 13.5px/1 system-ui,sans-serif;cursor:pointer}
+.tab.on{background:var(--lime);color:#0b0d0c}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-top:14px}
+.card h2{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card h2 span{width:22px;height:22px;border-radius:7px;background:var(--card2);color:var(--lime);display:grid;place-items:center;font-size:11px;flex:none}
+
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.row:last-child{border-bottom:0}
+.lab{font-size:13.5px;color:var(--dim)}
+.lab b{color:var(--text)}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:9px 14px;border-radius:11px;background:var(--card2);border:1px solid var(--line);color:var(--dim);font-size:13.5px;font-weight:600;cursor:pointer;user-select:none;transition:.15s}
+.chip:hover{border-color:#3a4a42;color:var(--text)}
+.chip.on{background:var(--lime);border-color:var(--lime);color:#0b0d0c}
+.chip small{opacity:.7;font-weight:600;margin-left:4px;font-size:11px}
+
+.opts{display:grid;gap:8px}
+.opt{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--card2);border:1px solid var(--line);cursor:pointer;user-select:none;font-size:13.5px}
+.opt input{appearance:none;width:20px;height:20px;border-radius:6px;border:2px solid #3a4a42;flex:none;display:grid;place-items:center;cursor:pointer}
+.opt input:checked{background:var(--lime);border-color:var(--lime)}
+.opt input:checked::after{content:'✓';color:#0b0d0c;font-weight:900;font-size:13px}
+.opt .pr{margin-left:auto;font-weight:800;color:var(--text);white-space:nowrap}
+
+input[type=range]{-webkit-appearance:none;width:100%;height:6px;border-radius:6px;background:linear-gradient(90deg,var(--lime),var(--lime-dark));outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:#fff;border:3px solid var(--lime);cursor:pointer}
+
+.result{margin-top:16px;background:linear-gradient(180deg,#182018,#111614);border:1px solid #2f3d34;border-radius:20px;overflow:hidden}
+.res-top{padding:18px 18px 6px}
+.cap{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);font-weight:700}
+.total{display:flex;align-items:baseline;gap:8px;margin-top:4px}
+.total b{font-size:38px;font-weight:900;letter-spacing:-.02em;color:var(--lime);font-variant-numeric:tabular-nums}
+.total span{font-size:20px;color:var(--dim)}
+.res-note{font-size:12.5px;color:var(--dim);margin-top:6px}
+
+.specs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:14px 18px 4px}
+.spec{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:12px;padding:9px 10px}
+.spec .k{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.spec .v{font-size:18px;font-weight:800;margin-top:3px;font-variant-numeric:tabular-nums}
+.spec .v small{font-size:11px;color:var(--dim);font-weight:600}
+
+.parts{padding:12px 18px 4px}
+.part{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px dashed rgba(255,255,255,.07);font-size:13.5px}
+.part:last-child{border-bottom:0}
+.part .n{color:var(--dim)}
+.part .n b{color:var(--text);display:block;font-size:13.5px}
+.part .n i{font-style:normal;font-size:11.5px;color:var(--mute)}
+.part .p{font-weight:800;white-space:nowrap;font-variant-numeric:tabular-nums}
+
+.warn{margin:10px 18px 0;padding:10px 12px;border-radius:12px;background:rgba(255,194,71,.09);border:1px solid rgba(255,194,71,.35);color:#ffd98a;font-size:12.5px;line-height:1.4}
+.warn b{color:var(--amber)}
+
+.cta{display:flex;gap:10px;padding:16px 18px 18px;flex-wrap:wrap}
+.btn{flex:1 1 160px;min-height:50px;border:0;border-radius:13px;font:700 15px/1 system-ui,sans-serif;cursor:pointer;display:grid;place-items:center;text-decoration:none}
+.btn.primary{background:var(--lime);color:#0b0d0c}
+.btn.primary:hover{background:#d6ff70}
+.btn.ghost{background:transparent;border:1px solid #3a4a42;color:var(--text)}
+.btn.ghost:hover{border-color:var(--lime);color:var(--lime)}
+
+.info{margin-top:16px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.info h3{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-bottom:10px}
+.info ul{list-style:none;display:grid;gap:8px}
+.info li{font-size:13.5px;color:var(--dim);padding-left:22px;position:relative}
+.info li::before{content:'✓';position:absolute;left:0;color:var(--green);font-weight:900}
+.info .fine{font-size:11.5px;color:var(--mute);margin-top:12px;line-height:1.5}
+
+footer{margin-top:18px;text-align:center;font-size:11.5px;color:var(--mute)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(80px);background:var(--lime);color:#0b0d0c;font-weight:700;padding:12px 18px;border-radius:12px;transition:.25s;z-index:50;font-size:14px}
+.toast.on{transform:translateX(-50%) translateY(0)}
+.hidden{display:none}
+
+@media(max-width:520px){
+  .specs{grid-template-columns:repeat(2,1fr)}
+  .total b{font-size:32px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="brand">
+    <div class="mark">⚡</div>
+    <div>
+      <h1>Электрификация велосипедов</h1>
+      <div class="sub">Новосибирск · под ключ</div>
+    </div>
+  </div>
+  <div class="addr">📍 <b>Вокзальная магистраль, 3</b> · установка и сборка на месте, без выезда</div>
+  <div class="tabs">
+    <button class="tab on" id="tabKit" type="button">Готовый комплект</button>
+    <button class="tab" id="tabBuild" type="button">Сборка по компонентам</button>
+  </div>
+</header>
+
+<section class="card">
+  <h2><span>1</span> Ваш велосипед</h2>
+  <div class="row" style="display:block">
+    <div class="lab" style="margin-bottom:10px">Тип</div>
+    <div class="chips" id="typeChips"></div>
+  </div>
+  <div class="row" style="display:block">
+    <div class="lab" style="margin-bottom:10px">Диаметр колеса</div>
+    <div class="chips" id="wheelChips"></div>
+  </div>
+  <div class="row" style="display:block">
+    <div class="lab" style="margin-bottom:8px">Вес райдера: <b id="riderVal">85 кг</b></div>
+    <input type="range" id="rider" min="50" max="150" step="5" value="85">
+  </div>
+  <div class="row" style="display:block">
+    <div class="lab" style="margin-bottom:10px">Груз</div>
+    <div class="chips" id="cargoChips"></div>
+  </div>
+</section>
+
+<section class="card">
+  <h2><span>2</span> Как будете ездить</h2>
+  <div class="row" style="display:block">
+    <div class="lab" style="margin-bottom:10px">Комфортная скорость</div>
+    <div class="chips" id="speedChips"></div>
+  </div>
+  <div class="row" style="display:block">
+    <div class="lab" style="margin-bottom:10px">Маршруты</div>
+    <div class="chips" id="terrainChips"></div>
+  </div>
+  <div class="row" style="display:block">
+    <div class="lab" style="margin-bottom:10px">Запас хода</div>
+    <div class="chips" id="rangeChips"></div>
+  </div>
+  <div class="row" style="display:block">
+    <div class="lab" style="margin-bottom:10px">Аккумулятор</div>
+    <div class="chips" id="brandChips"></div>
+  </div>
+</section>
+
+<section class="card hidden" id="buildCard">
+  <h2><span>3</span> Сборка</h2>
+  <div class="row" style="display:block">
+    <div class="lab" style="margin-bottom:10px">Рама</div>
+    <div class="chips" id="frameChips"></div>
+  </div>
+  <div class="row" style="display:block">
+    <div class="lab" style="margin-bottom:10px">Дисплей</div>
+    <div class="chips" id="displayChips"></div>
+  </div>
+  <div class="row" style="display:block">
+    <div class="lab" style="margin-bottom:10px">Спицовка</div>
+    <div class="chips" id="laceChips"></div>
+  </div>
+  <div class="row" style="display:block">
+    <div class="lab" style="margin-bottom:10px">Опции</div>
+    <div class="opts" id="optList"></div>
+  </div>
+</section>
+
+<section class="result" id="result"></section>
+
+<div class="info">
+  <h3>Что входит</h3>
+  <ul>
+    <li>Мотор-колесо, спицовка в обод под ваш размер, покрышка и камера</li>
+    <li>Контроллер, дисплей, ассистент (PAS), газ, короб для электроники</li>
+    <li>Аккумулятор с зарядным устройством, гарантия на АКБ</li>
+    <li>Установка, настройка, проверка на стенде и тест-драйв</li>
+  </ul>
+  <div class="fine">Гарантия: LG — 1 год, China A+ — 6 месяцев, на работу — по договорённости. Итоговая смета подтверждается после осмотра велосипеда: рама, дропауты и тормоза могут потребовать доработки.</div>
+</div>
+
+<footer>Вокзальная магистраль, 3 · Новосибирск · без выезда</footer>
+</div>
+<div class="toast" id="toast">Заявка скопирована</div>
+
+<script>
+const DATA = {
+ "frames": [
+  {
+   "id": "mountain_al",
+   "name": "Горная алюминиевая",
+   "price": 35000
+  },
+  {
+   "id": "mountain_steel",
+   "name": "Горная стальная",
+   "price": 20000
+  },
+  {
+   "id": "fat_al",
+   "name": "Фэт алюминиевая",
+   "price": 50000
+  },
+  {
+   "id": "fat_steel",
+   "name": "Фэт стальная",
+   "price": 25000
+  },
+  {
+   "id": "space",
+   "name": "Пространственная",
+   "price": 130000
+  }
+ ],
+ "work": {
+  "basic": {
+   "id": "basic",
+   "name": "Базовая спицовка",
+   "price": 12700
+  },
+  "premium": {
+   "id": "premium",
+   "name": "Премиум спицовка (e-MTX)",
+   "price": 17200
+  }
+ },
+ "options": [
+  {
+   "id": "pas",
+   "name": "PAS ассистент",
+   "price": 1500
+  },
+  {
+   "id": "throttle_std",
+   "name": "Курок газа",
+   "price": 1500
+  },
+  {
+   "id": "throttle_half",
+   "name": "Половинчатая ручка газа",
+   "price": 3500
+  },
+  {
+   "id": "brakes_hydr",
+   "name": "Гидравлические тормоза DOT",
+   "price": 12000
+  },
+  {
+   "id": "mirrors",
+   "name": "Зеркала",
+   "price": 1500
+  },
+  {
+   "id": "wings",
+   "name": "Крылья",
+   "price": 1500
+  },
+  {
+   "id": "dropout",
+   "name": "Усилители дропаутов (мотор ≥500 Вт)",
+   "price": 1500
+  }
+ ],
+ "displays": [
+  {
+   "id": "none",
+   "name": "Без дисплея (ключ/индикатор)",
+   "price": 1000
+  },
+  {
+   "id": "bw",
+   "name": "Чёрно-белый дисплей",
+   "price": 7000
+  },
+  {
+   "id": "color",
+   "name": "Цветной дисплей",
+   "price": 7500
+  }
+ ],
+ "motors": [
+  {
+   "id": "geared_mountain_250_front",
+   "name": "250 Вт перед",
+   "power": 250,
+   "mount": "front",
+   "family": "mountain",
+   "kind": "geared",
+   "price": 15700
+  },
+  {
+   "id": "geared_mountain_250_rear",
+   "name": "250 Вт зад",
+   "power": 250,
+   "mount": "rear",
+   "family": "mountain",
+   "kind": "geared",
+   "price": 15700
+  },
+  {
+   "id": "geared_mountain_350_front",
+   "name": "350 Вт перед",
+   "power": 350,
+   "mount": "front",
+   "family": "mountain",
+   "kind": "geared",
+   "price": 16800
+  },
+  {
+   "id": "geared_mountain_350_rear",
+   "name": "350 Вт зад",
+   "power": 350,
+   "mount": "rear",
+   "family": "mountain",
+   "kind": "geared",
+   "price": 16800
+  },
+  {
+   "id": "geared_mountain_500_front",
+   "name": "500 Вт перед",
+   "power": 500,
+   "mount": "front",
+   "family": "mountain",
+   "kind": "geared",
+   "price": 18000
+  },
+  {
+   "id": "geared_mountain_500_rear",
+   "name": "500 Вт зад",
+   "power": 500,
+   "mount": "rear",
+   "family": "mountain",
+   "kind": "geared",
+   "price": 18000
+  },
+  {
+   "id": "geared_fat_500_front",
+   "name": "500 Вт перед",
+   "power": 500,
+   "mount": "front",
+   "family": "fat",
+   "kind": "geared",
+   "price": 22000
+  },
+  {
+   "id": "geared_mountain_750_rear",
+   "name": "750 Вт зад",
+   "power": 750,
+   "mount": "rear",
+   "family": "mountain",
+   "kind": "geared",
+   "price": 25000
+  },
+  {
+   "id": "geared_fat_750_rear",
+   "name": "750 Вт зад",
+   "power": 750,
+   "mount": "rear",
+   "family": "fat",
+   "kind": "geared",
+   "price": 26000
+  },
+  {
+   "id": "geared_fat_950_rear",
+   "name": "950 Вт зад",
+   "power": 950,
+   "mount": "rear",
+   "family": "fat",
+   "kind": "geared",
+   "price": 16000
+  },
+  {
+   "id": "geared_fat_1000ch_rear",
+   "name": "1000 Вт зад (1000Ch W)",
+   "power": 1000,
+   "mount": "rear",
+   "family": "fat",
+   "kind": "geared",
+   "price": 16000
+  },
+  {
+   "id": "dd_mountain_1000",
+   "name": "1000 Вт зад",
+   "power": 1000,
+   "mount": "rear",
+   "family": "mountain",
+   "kind": "dd",
+   "price": 21000
+  },
+  {
+   "id": "geared_fat_1000_rear",
+   "name": "1000 Вт зад",
+   "power": 1000,
+   "mount": "rear",
+   "family": "fat",
+   "kind": "geared",
+   "price": 28000
+  },
+  {
+   "id": "geared_mountain_1000_rear",
+   "name": "1000 Вт зад",
+   "power": 1000,
+   "mount": "rear",
+   "family": "mountain",
+   "kind": "geared",
+   "price": 28000
+  },
+  {
+   "id": "dd_fat_1000",
+   "name": "1000 Вт зад",
+   "power": 1000,
+   "mount": "rear",
+   "family": "fat",
+   "kind": "dd",
+   "price": 35000
+  },
+  {
+   "id": "geared_fat_1200_rear",
+   "name": "1200 Вт зад",
+   "power": 1200,
+   "mount": "rear",
+   "family": "fat",
+   "kind": "geared",
+   "price": 34000
+  },
+  {
+   "id": "dd_fat_1500",
+   "name": "1500 Вт зад",
+   "power": 1500,
+   "mount": "rear",
+   "family": "fat",
+   "kind": "dd",
+   "price": 25000
+  },
+  {
+   "id": "dd_mountain_1500",
+   "name": "1500 Вт зад",
+   "power": 1500,
+   "mount": "rear",
+   "family": "mountain",
+   "kind": "dd",
+   "price": 25000
+  },
+  {
+   "id": "dd_fat_2000",
+   "name": "2000 Вт зад",
+   "power": 2000,
+   "mount": "rear",
+   "family": "fat",
+   "kind": "dd",
+   "price": 28000
+  },
+  {
+   "id": "dd_mountain_2000",
+   "name": "2000 Вт зад",
+   "power": 2000,
+   "mount": "rear",
+   "family": "mountain",
+   "kind": "dd",
+   "price": 28000
+  },
+  {
+   "id": "dd_fat_3000",
+   "name": "3000 Вт зад",
+   "power": 3000,
+   "mount": "rear",
+   "family": "fat",
+   "kind": "dd",
+   "price": 45000
+  },
+  {
+   "id": "dd_fat_5000",
+   "name": "5000 Вт зад",
+   "power": 5000,
+   "mount": "rear",
+   "family": "fat",
+   "kind": "dd",
+   "price": 60000
+  }
+ ],
+ "controllers": [
+  {
+   "id": "c1",
+   "name": "36-48V 15A (250-350W)",
+   "volts": [
+    36,
+    48
+   ],
+   "amps": 15,
+   "rated": 250,
+   "price": 6000
+  },
+  {
+   "id": "c2",
+   "name": "36-48V 18A (350W)",
+   "volts": [
+    36,
+    48
+   ],
+   "amps": 18,
+   "rated": 350,
+   "price": 7000
+  },
+  {
+   "id": "c4",
+   "name": "36-48V 25A (500W)",
+   "volts": [
+    36,
+    48
+   ],
+   "amps": 25,
+   "rated": 500,
+   "price": 9000
+  },
+  {
+   "id": "c5",
+   "name": "48V 30A (750W)",
+   "volts": [
+    48
+   ],
+   "amps": 30,
+   "rated": 750,
+   "price": 10000
+  },
+  {
+   "id": "c5_60",
+   "name": "60V 30A (750W)",
+   "volts": [
+    60
+   ],
+   "amps": 30,
+   "rated": 750,
+   "price": 11000
+  },
+  {
+   "id": "c12",
+   "name": "48-60-72V 50A (1000W DD фэт)",
+   "volts": [
+    48,
+    60,
+    72
+   ],
+   "amps": 50,
+   "rated": 1000,
+   "price": 8000
+  },
+  {
+   "id": "c6",
+   "name": "36-72V 35A (1000W)",
+   "volts": [
+    36,
+    72
+   ],
+   "amps": 35,
+   "rated": 1000,
+   "price": 11000
+  },
+  {
+   "id": "c7",
+   "name": "48-60V 40A (1200W)",
+   "volts": [
+    48,
+    60
+   ],
+   "amps": 40,
+   "rated": 1200,
+   "price": 13000
+  },
+  {
+   "id": "c7_72",
+   "name": "72V 40A (1200W)",
+   "volts": [
+    72
+   ],
+   "amps": 40,
+   "rated": 1200,
+   "price": 23000
+  },
+  {
+   "id": "c8_mt",
+   "name": "48-60V 50A (1500W горный DD)",
+   "volts": [
+    48,
+    60
+   ],
+   "amps": 50,
+   "rated": 1500,
+   "price": 17000
+  },
+  {
+   "id": "c8_fat",
+   "name": "48-60V 45A (1500W фэт DD)",
+   "volts": [
+    48,
+    60
+   ],
+   "amps": 45,
+   "rated": 1500,
+   "price": 17000
+  },
+  {
+   "id": "c9",
+   "name": "48-60-72V 60A (2000W)",
+   "volts": [
+    48,
+    60,
+    72
+   ],
+   "amps": 60,
+   "rated": 2000,
+   "price": 18000
+  },
+  {
+   "id": "c10",
+   "name": "48-60-72V 80A (3000W)",
+   "volts": [
+    48,
+    60,
+    72
+   ],
+   "amps": 80,
+   "rated": 3000,
+   "price": 21000
+  },
+  {
+   "id": "c11",
+   "name": "48-60-72V 120A (5000W)",
+   "volts": [
+    48,
+    60,
+    72
+   ],
+   "amps": 120,
+   "rated": 5000,
+   "price": 28000
+  }
+ ],
+ "batts": [
+  {
+   "id": "36_10_china",
+   "brand": "China A+",
+   "v": 36,
+   "ah": 10,
+   "price": 12700
+  },
+  {
+   "id": "36_10_lg",
+   "brand": "LG",
+   "v": 36,
+   "ah": 10,
+   "price": 19400
+  },
+  {
+   "id": "36_15_china",
+   "brand": "China A+",
+   "v": 36,
+   "ah": 15,
+   "price": 15800
+  },
+  {
+   "id": "36_15_lg",
+   "brand": "LG",
+   "v": 36,
+   "ah": 15,
+   "price": 24900
+  },
+  {
+   "id": "36_20_china",
+   "brand": "China A+",
+   "v": 36,
+   "ah": 20,
+   "price": 18900
+  },
+  {
+   "id": "36_20h_china",
+   "brand": "China A+",
+   "v": 36,
+   "ah": 20,
+   "price": 25900
+  },
+  {
+   "id": "36_20_lg",
+   "brand": "LG",
+   "v": 36,
+   "ah": 20,
+   "price": 30400
+  },
+  {
+   "id": "36_55_lg",
+   "brand": "LG",
+   "v": 36,
+   "ah": 55,
+   "price": 78750
+  },
+  {
+   "id": "36_55_china",
+   "brand": "China A+",
+   "v": 36,
+   "ah": 55,
+   "price": 78750
+  },
+  {
+   "id": "48_10_china",
+   "brand": "China A+",
+   "v": 48,
+   "ah": 10,
+   "price": 14500
+  },
+  {
+   "id": "48_10_lg",
+   "brand": "LG",
+   "v": 48,
+   "ah": 10,
+   "price": 22700
+  },
+  {
+   "id": "48_15_china",
+   "brand": "China A+",
+   "v": 48,
+   "ah": 15,
+   "price": 18590
+  },
+  {
+   "id": "48_15h_china",
+   "brand": "China A+",
+   "v": 48,
+   "ah": 15,
+   "price": 25590
+  },
+  {
+   "id": "48_15_lg",
+   "brand": "LG",
+   "v": 48,
+   "ah": 15,
+   "price": 29850
+  },
+  {
+   "id": "48_20_china",
+   "brand": "China A+",
+   "v": 48,
+   "ah": 20,
+   "price": 22620
+  },
+  {
+   "id": "48_20h_china",
+   "brand": "China A+",
+   "v": 48,
+   "ah": 20,
+   "price": 29620
+  },
+  {
+   "id": "48_20_lg",
+   "brand": "LG",
+   "v": 48,
+   "ah": 20,
+   "price": 34900
+  },
+  {
+   "id": "48_20h_lg",
+   "brand": "LG",
+   "v": 48,
+   "ah": 20,
+   "price": 42900
+  },
+  {
+   "id": "48_50_china",
+   "brand": "China A+",
+   "v": 48,
+   "ah": 50,
+   "price": 60000
+  },
+  {
+   "id": "48_50_lg",
+   "brand": "LG",
+   "v": 48,
+   "ah": 50,
+   "price": 82110
+  },
+  {
+   "id": "48_55_lg",
+   "brand": "LG",
+   "v": 48,
+   "ah": 55,
+   "price": 89250
+  },
+  {
+   "id": "48_55_china",
+   "brand": "China A+",
+   "v": 48,
+   "ah": 55,
+   "price": 89250
+  },
+  {
+   "id": "60_50_china",
+   "brand": "China A+",
+   "v": 60,
+   "ah": 50,
+   "price": 75000
+  },
+  {
+   "id": "60_50_lg",
+   "brand": "LG",
+   "v": 60,
+   "ah": 50,
+   "price": 90720
+  },
+  {
+   "id": "60_55_lg",
+   "brand": "LG",
+   "v": 60,
+   "ah": 55,
+   "price": 105000
+  },
+  {
+   "id": "60_55_china",
+   "brand": "China A+",
+   "v": 60,
+   "ah": 55,
+   "price": 105000
+  },
+  {
+   "id": "72_50_china",
+   "brand": "China A+",
+   "v": 72,
+   "ah": 50,
+   "price": 95000
+  },
+  {
+   "id": "72_50_lg",
+   "brand": "LG",
+   "v": 72,
+   "ah": 50,
+   "price": 118650
+  },
+  {
+   "id": "72_55_lg",
+   "brand": "LG",
+   "v": 72,
+   "ah": 55,
+   "price": 141750
+  },
+  {
+   "id": "72_55_china",
+   "brand": "China A+",
+   "v": 72,
+   "ah": 55,
+   "price": 141750
+  }
+ ],
+ "install": 8500
+};
+
+const PHONE = ''; // впишите телефон: +7 (383) 123-45-67
+const PHONE_RAW = ''; // тот же номер цифрами
+const TELEGRAM = 'https://t.me/citybike_nsk_bot';
+
+const state = {
+  mode:'kit',
+  type:'mountain',
+  wheel:'27.5',
+  rider:85,
+  cargo:0,
+  speed:35,
+  terrain:'city',
+  range:40,
+  brand:'LG',
+  frame:'none',
+  display:'color',
+  lacing:'basic',
+  opts:{pas:true,throttle_std:true,dropout:true,brakes_hydr:false,mirrors:false,wings:false,throttle_half:false}
+};
+
+const KITS = [
+  {id:'k250', name:'Редукторный 250 Вт', power:250, price:19000, ctrl:'36В 15А', vmax:{36:27}, wheels:['26','27.5','29']},
+  {id:'k500', name:'Редукторный 350–500 Вт', power:500, price:21900, ctrl:'36/48В 17–25А', vmax:{36:30,48:40}, wheels:['26','27.5','29']},
+  {id:'k1000', name:'MXUS XF19R · редукторный 1000 Вт', power:1000, price:34900, ctrl:'36/48В 30–35А · редуктор 4.3 кг', vmax:{36:38,48:50}, wheels:['26','27.5','29']},
+  {id:'k3000', name:'Direct-drive 3000 Вт', power:3000, price:42900, ctrl:'48–72В 60–80А', vmax:{48:60,72:75}, wheels:['26','27.5','29','R17','R18','R19','R20','R21']}
+];
+
+const money = n => Math.round(n).toLocaleString('ru-RU') + ' ₽';
+const byId = (arr,id) => arr.find(x => x.id === id);
+
+/* ── модели ─────────────────────────────────────────────────── */
+function whPerKm(speed, mass, terrain){
+  const v = speed / 3.6, crr = 0.009, cda = 0.42, rho = 1.2, eff = 0.82;
+  const p = crr * mass * 9.81 * v + 0.5 * rho * cda * v * v * v;
+  const f = terrain === 'hills' ? 1.45 : terrain === 'city' ? 1.18 : 1.0;
+  return (p / eff) * f / speed;
+}
+
+function kitSpeed(kit, v){
+  if (kit.id === 'k250') return Math.round(kit.vmax[36]);
+  return Math.round(kit.vmax[v] || kit.vmax[48]);
+}
+
+function pickKit(){
+  const isR = state.wheel.startsWith('R');
+  if (isR || state.type === 'fat') return KITS[3];
+  return KITS.find(k => (k.vmax[48] || k.vmax[36]) >= state.speed) || KITS[3];
+}
+
+/* ── конструктор ─────────────────────────────────────────────── */
+// скорость ≈ напряжение × KV мотора (км/ч на вольт)
+const KV = {250:0.70, 350:0.83, 500:0.95, 750:0.85, 950:0.90, 1000:0.95, 1200:0.95, 1500:1.00, 2000:1.05, 3000:1.10, 5000:1.20};
+function speedAt(motor, v){ return Math.round((KV[motor.power] || 0.9) * v); }
+
+function motorsFor(){
+  const fam = state.type === 'fat' ? 'fat' : 'mountain';
+  return DATA.motors.filter(m => m.family === fam && m.mount === 'rear');
+}
+
+const POWER_FOR_SPEED = [[25,250],[30,350],[35,500],[40,750],[45,1000],[50,1200],[55,1500],[60,2000],[70,3000],[999,5000]];
+function powerNeed(s){ for (const [v,p] of POWER_FOR_SPEED) if (s <= v) return p; return 5000; }
+
+function pickMotor(){
+  const list = motorsFor();
+  const need = powerNeed(state.speed);
+  return list.find(m => m.power >= need) || list[list.length - 1];
+}
+
+function chooseDrive(motor){
+  const order = [48, 60, 72];
+  for (const v of order) {
+    const c = pickController(motor, v);
+    if (c && c.volts.includes(v) && speedAt(motor, v) >= state.speed) return {ctrl:c, v};
+  }
+  const c = pickController(motor, 72) || pickController(motor, 60) || pickController(motor, 48) || DATA.controllers[DATA.controllers.length - 1];
+  const v = Math.max.apply(null, c.volts);
+  return {ctrl:c, v};
+}
+
+function voltsFor(motor, ctrl){
+  const vs = ctrl.volts.slice().sort((a,b) => a-b);
+  const fit = vs.find(v => speedAt(motor, v) >= state.speed);
+  return fit || vs[vs.length - 1];
+}
+
+function pickController(motor, v){
+  const list = DATA.controllers
+    .filter(c => c.rated >= motor.power - 50 && c.volts.includes(v))
+    .sort((a,b) => a.rated - b.rated || a.price - b.price);
+  return list[0] || DATA.controllers[DATA.controllers.length - 1];
+}
+
+function pickBatt(v, needKm, whkm){
+  const pool = DATA.batts.filter(b => b.v === v && b.brand === state.brand).sort((a,b) => a.ah - b.ah || a.price - b.price);
+  const pool2 = pool.length ? pool : DATA.batts.filter(b => b.v === v).sort((a,b) => a.ah - b.ah || a.price - b.price);
+  if (!pool2.length) return {batt:null, short:false};
+  const need = needKm * whkm * 1.15;
+  const fit = pool2.find(b => b.v * b.ah * 0.8 >= need);
+  return fit ? {batt:fit, short:false} : {batt:pool2[pool2.length - 1], short:true};
+}
+
+
+function build(){
+  const mass = 18 + state.rider + state.cargo + 5;
+  const parts = [];
+  const warns = [];
+  let motor, ctrl, batt, speed, kit = null;
+
+  if (state.mode === 'kit') {
+    kit = pickKit();
+    const v = kit.id === 'k250' ? 36 : (kit.id === 'k3000' ? 48 : 48);
+    speed = kitSpeed(kit, v);
+    const whkm = whPerKm(Math.min(state.speed, speed), mass, state.terrain);
+    const b = pickBatt(v, state.range, whkm);
+    batt = b.batt;
+    if (state.type === 'fat') warns.push('Для фэта подбор идёт по компонентам: откройте вкладку «Сборка по компонентам» — там моторы 500–1200 Вт под ваш вес и скорость.');
+    if (b.short && batt) warns.push('Батареи ' + batt.v + 'В ' + batt.ah + 'Ач хватит примерно на ' + Math.round(batt.v*batt.ah*0.8/whkm) + ' км — меньше нужного запаса.');
+    parts.push({n:kit.name + (kit.id === 'k250' ? ' · под заказ' : ''), d:kit.ctrl + ' · колесо ' + state.wheel + (state.wheel.startsWith('R') ? '' : '"') + ' · дисплей, PAS, газ, короб', p:kit.price});
+    if (batt) parts.push({n:'АКБ ' + batt.brand + ' ' + batt.v + 'В ' + batt.ah + 'Ач', d:'гарантия ' + (batt.brand === 'LG' ? '1 год' : '6 мес'), p:batt.price});
+    parts.push({n:'Установка', d:'настройка, стенд, тест-драйв', p:DATA.install});
+    const total = parts.reduce((s,x) => s + x.p, 0);
+    return {total, parts, warns, speed, power:kit.power, range: batt ? Math.round(batt.v*batt.ah*0.8/whPerKm(Math.min(state.speed,speed),mass,state.terrain)) : 0,
+      whkm: whPerKm(Math.min(state.speed,speed),mass,state.terrain), kit, batt, motor:null};
+  }
+
+  // конструктор
+  motor = pickMotor();
+  const drv = chooseDrive(motor);
+  ctrl = drv.ctrl;
+  const v = drv.v;
+  speed = speedAt(motor, v);
+  if (speed < state.speed) warns.push('На этой сборке максимум ' + speed + ' км/ч. Чтобы выйти на ' + state.speed + ' км/ч, нужен мотор мощнее или колесо с другой намоткой — обсудим при осмотре.');
+  const whkm = whPerKm(Math.min(state.speed, speed), mass, state.terrain);
+  const b = pickBatt(v, state.range, whkm);
+  batt = b.batt;
+  if (b.short && batt) warns.push('Максимальная батарея ' + batt.v + 'В ' + batt.ah + 'Ач даёт около ' + Math.round(batt.v*batt.ah*0.8/whkm) + ' км — меньше нужного запаса.');
+
+  const ctrlPower = ctrl.amps * v;
+  if (ctrlPower < motor.power * 0.9) warns.push('Контроллер ' + ctrl.amps + 'А при ' + v + 'В выдаёт ~' + Math.round(ctrlPower) + ' Вт, а мотор ' + motor.power + ' Вт — на полную он не выйдет. Подберём контроллер мощнее.');
+
+  parts.push({n:'Мотор ' + motor.name, d:(motor.kind === 'dd' ? 'Direct-drive' : 'редукторный') + ' · ' + (motor.family === 'fat' ? 'фэт' : 'горный'), p:motor.price});
+  parts.push({n:'Контроллер ' + ctrl.name.replace(/\s*\(.*\)/, ''), d:ctrl.name.match(/\(.*\)/) ? ctrl.name.match(/\(.*\)/)[0] : '', p:ctrl.price});
+  if (batt) parts.push({n:'АКБ ' + batt.brand + ' ' + batt.v + 'В ' + batt.ah + 'Ач', d:'гарантия ' + (batt.brand === 'LG' ? '1 год' : '6 мес'), p:batt.price});
+
+  const disp = byId(DATA.displays, state.display);
+  if (disp) parts.push({n:disp.name, d:'', p:disp.price});
+
+  if (state.frame !== 'none') {
+    const fr = byId(DATA.frames, state.frame);
+    if (fr) parts.push({n:fr.name, d:'рама', p:fr.price});
+  }
+
+  const lace = DATA.work[state.lacing];
+  if (lace) parts.push({n:lace.name, d:'сборка колеса', p:lace.price});
+
+  for (const o of DATA.options) {
+    if (state.opts[o.id]) parts.push({n:o.name, d:'опция', p:o.price});
+  }
+  parts.push({n:'Установка', d:'настройка, стенд, тест-драйв', p:DATA.install});
+
+  const total = parts.reduce((s,x) => s + x.p, 0);
+  return {total, parts, warns, speed, power:motor.power, range: batt ? Math.round(batt.v*batt.ah*0.8/whkm) : 0, whkm, kit:null, batt, motor, ctrl, v};
+}
+
+/* ── рендер ──────────────────────────────────────────────────── */
+const $ = id => document.getElementById(id);
+const els = {
+  type:$('typeChips'), wheel:$('wheelChips'), cargo:$('cargoChips'),
+  speed:$('speedChips'), terrain:$('terrainChips'), range:$('rangeChips'), brand:$('brandChips'),
+  frame:$('frameChips'), display:$('displayChips'), lace:$('laceChips'), opts:$('optList'),
+  rider:$('rider'), riderVal:$('riderVal'), result:$('result'), toast:$('toast'),
+  buildCard:$('buildCard'), tabKit:$('tabKit'), tabBuild:$('tabBuild')
+};
+
+function chips(host, items, current, onPick){
+  host.innerHTML = '';
+  items.forEach(it => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'chip' + (String(it.value) === String(current) ? ' on' : '');
+    b.innerHTML = it.label;
+    b.onclick = () => onPick(it.value);
+    host.appendChild(b);
+  });
+}
+
+const WHEELS_M = ['26','27.5','29'].map(w => ({value:w, label:w + '"'}));
+const WHEELS_F = ['26','27.5','29','R17','R18','R19','R20','R21'].map(w => ({value:w, label:w + (w.startsWith('R') ? '' : '"')}));
+const TYPES = [{value:'mountain',label:'Горный / городской'},{value:'fat',label:'Фэт / мопед (R17–R21)'}];
+const CARGO = [{value:0,label:'нет'},{value:5,label:'5 кг'},{value:15,label:'15 кг'},{value:25,label:'25 кг'}];
+const SPEEDS = [25,30,35,40,45,50,55,60,70].map(s => ({value:s,label:s + ' км/ч'}));
+const TERRAIN = [{value:'flat',label:'Ровно'},{value:'city',label:'Город'},{value:'hills',label:'Горки'}];
+const RANGES = [20,40,60,80,100,150].map(r => ({value:r,label:r + ' км'}));
+const BRANDS = [{value:'LG',label:'LG · премиум'},{value:'China A+',label:'China A+ · дешевле'}];
+
+function render(){
+  // чипы
+  chips(els.type, TYPES, state.type, v => { state.type = v; if (v === 'mountain' && state.wheel.startsWith('R')) state.wheel = '27.5'; refresh(); });
+  chips(els.wheel, state.type === 'fat' ? WHEELS_F : WHEELS_M, state.wheel, v => { state.wheel = v; refresh(); });
+  chips(els.cargo, CARGO, state.cargo, v => { state.cargo = v; refresh(); });
+  chips(els.speed, SPEEDS, state.speed, v => { state.speed = v; refresh(); });
+  chips(els.terrain, TERRAIN, state.terrain, v => { state.terrain = v; refresh(); });
+  chips(els.range, RANGES, state.range, v => { state.range = v; refresh(); });
+  chips(els.brand, BRANDS, state.brand, v => { state.brand = v; refresh(); });
+
+  if (state.mode === 'build') {
+    const frameItems = [{value:'none',label:'Своя'}, ...DATA.frames.map(f => ({value:f.id, label:f.name + ' <small>' + Math.round(f.price/1000) + 'к</small>'}))];
+    chips(els.frame, frameItems, state.frame, v => { state.frame = v; refresh(); });
+    chips(els.display, DATA.displays.map(d => ({value:d.id,label:d.name + ' <small>' + Math.round(d.price/1000) + 'к</small>'})), state.display, v => { state.display = v; refresh(); });
+    chips(els.lace, Object.values(DATA.work).map(w => ({value:w.id,label:w.name.replace(' спицовка','') + ' <small>' + Math.round(w.price/1000) + 'к</small>'})), state.lacing, v => { state.lacing = v; refresh(); });
+
+    els.opts.innerHTML = '';
+    DATA.options.forEach(o => {
+      const checked = state.opts[o.id] ? 'checked' : '';
+      const lab = document.createElement('label');
+      lab.className = 'opt';
+      lab.innerHTML = '<input type="checkbox" ' + checked + '><span>' + o.name + '</span><span class="pr">' + money(o.price) + '</span>';
+      lab.querySelector('input').onchange = e => { state.opts[o.id] = e.target.checked; refresh(); };
+      els.opts.appendChild(lab);
+    });
+  }
+
+  const plan = build();
+  const maxSpeed = plan.speed;
+  const range = plan.range;
+
+  els.result.innerHTML = `
+    <div class="res-top">
+      <div class="cap">${state.mode === 'kit' ? 'Готовый комплект' : 'Сборка по компонентам'}</div>
+      <div class="total"><b>${plan.total.toLocaleString('ru-RU')}</b><span>₽ под ключ</span></div>
+      <div class="res-note">${state.mode === 'kit'
+        ? plan.kit.name + ' · ' + (plan.batt ? plan.batt.brand + ' ' + plan.batt.v + 'В ' + plan.batt.ah + 'Ач' : '') + ' · установка'
+        : 'Мотор ' + plan.power + ' Вт · ' + (plan.batt ? plan.batt.brand + ' ' + plan.batt.v + 'В ' + plan.batt.ah + 'Ач' : '') + (plan.ctrl ? ' · контроллер ' + plan.ctrl.amps + 'А' : '')}</div>
+    </div>
+    <div class="specs">
+      <div class="spec"><div class="k">Скорость</div><div class="v">${maxSpeed}<small> км/ч макс</small></div></div>
+      <div class="spec"><div class="k">Запас</div><div class="v">${range}<small> км</small></div></div>
+      <div class="spec"><div class="k">Мощность</div><div class="v">${plan.power}<small> Вт</small></div></div>
+      <div class="spec"><div class="k">Расход</div><div class="v">${plan.whkm.toFixed(1)}<small> Втч/км</small></div></div>
+    </div>
+    <div class="parts">
+      ${plan.parts.map(p => `<div class="part"><div class="n"><b>${p.n}</b>${p.d ? '<i>' + p.d + '</i>' : ''}</div><div class="p">${money(p.p)}</div></div>`).join('')}
+    </div>
+    ${plan.warns.map(w => `<div class="warn">⚠ <b>Важно:</b> ${w}</div>`).join('')}
+    <div class="cta">
+      <button class="btn primary" id="copyBtn" type="button">Скопировать заявку</button>
+      <a class="btn ghost" href="${TELEGRAM}" target="_blank" rel="noopener">Написать в Telegram</a>
+    </div>
+    <div class="res-note" style="padding:0 18px 16px">${PHONE ? 'или позвоните: <a href="tel:' + PHONE_RAW + '" style="color:var(--lime);text-decoration:none;font-weight:800">' + PHONE + '</a>' : 'Напишите в Telegram — ответим и запишем на установку'}</div>
+  `;
+  $('copyBtn').onclick = copyOrder;
+  window.__plan = plan;
+}
+
+function orderText(){
+  const p = window.__plan;
+  if (!p) return '';
+  const lines = [
+    'Заявка с конфигуратора',
+    'Режим: ' + (state.mode === 'kit' ? 'готовый комплект' : 'сборка по компонентам'),
+    'Велосипед: ' + (state.type === 'fat' ? 'фэт/мопед' : 'горный/городской') + ', колесо ' + state.wheel,
+    'Райдер: ' + state.rider + ' кг · груз: ' + state.cargo + ' кг',
+    'Скорость: ' + p.speed + ' км/ч · запас: ' + p.range + ' км · ' + (state.terrain === 'hills' ? 'горки' : state.terrain === 'city' ? 'город' : 'ровно'),
+    ''
+  ];
+  p.parts.forEach(x => lines.push('• ' + x.n + ' — ' + money(x.p)));
+  lines.push('');
+  lines.push('Итого: ' + money(p.total));
+  return lines.join('\n');
+}
+
+function copyOrder(){
+  const text = orderText();
+  const done = () => { els.toast.classList.add('on'); setTimeout(() => els.toast.classList.remove('on'), 1800); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(() => fb(text, done));
+  } else fb(text, done);
+}
+function fb(text, done){
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); } catch(e) {}
+  document.body.removeChild(ta); done();
+}
+
+function setMode(m){
+  state.mode = m;
+  els.tabKit.classList.toggle('on', m === 'kit');
+  els.tabBuild.classList.toggle('on', m === 'build');
+  els.buildCard.classList.toggle('hidden', m !== 'build');
+  refresh();
+}
+els.tabKit.onclick = () => setMode('kit');
+els.tabBuild.onclick = () => setMode('build');
+els.rider.oninput = e => { state.rider = +e.target.value; els.riderVal.textContent = state.rider + ' кг'; refresh(); };
+
+function refresh(){ render(); }
+window.__state = state;
+window.__refresh = refresh;
+refresh();
+</script>
+</body>
+</html>
