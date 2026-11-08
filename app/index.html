@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a090d">
+<title>CITY BIKE · Бортовой компьютер</title>
+<link rel="stylesheet" href="leaflet/leaflet.css">
+<link rel="stylesheet" href="css/app.css">
+
+</head>
+<body>
+<div class="rig">
+<header class="head">
+<div class="brand"><img class="brand-logo" src="img/astro.png" alt=""><div class="brand-text"><div class="t1"><i>City</i><b>Bike</b></div><div class="t2">Бортовой компьютер</div></div></div>
+<div class="head-stats"><div>СТИЛЬ <b id="headStyle">НОРМАЛЬНЫЙ</b></div><div id="riderModeHeader">ПРИВОД <b>ГАЗ</b></div><div id="clock">--:--:--</div></div>
+<div class="head-right">
+  <button class="cache-reset-btn" id="cacheResetBtn" title="Сброс кэша (долгое нажатие — полный сброс)">КЭШ</button>
+  <span class="net"><span class="status-dot" id="netDot"></span><span id="netLabel">В СЕТИ</span></span>
+</div>
+</header>
+<div class="hazard"><i></i><b></b></div>
+<div class="deck">
+<div class="panel">
+<h2 class="panel-head">01 · ВЕЛОСИПЕД <span class="tag">КОНФИГ</span><span class="collapse-icon">▼</span></h2>
+<div class="panel-body">
+<div class="field"><label for="bikeMass">Вес велосипеда, кг</label><input type="number" inputmode="decimal" id="bikeMass" value="80" min="5" max="150" step="0.5"></div>
+<div class="field"><label for="riderMass">Вес райдера, кг</label><input type="number" inputmode="decimal" id="riderMass" value="115" min="30" max="200" step="0.5"></div>
+<div class="field"><label for="cargoMass">Вес груза, кг</label><input type="number" inputmode="decimal" id="cargoMass" value="5" min="0" max="80" step="0.5"></div>
+<div class="field"><label for="frameType">Тип рамы</label><select id="frameType"><option value="regular">Обычная</option><option value="space" selected>Пространственная</option></select></div>
+<div class="field"><label for="wheelSize">Колесо</label><select id="wheelSize"><option value="20">20"</option><option value="24">24"</option><option value="26">26"</option><option value="27.5">27.5"</option><option value="29">29"</option><option value="r17" selected>R17</option></select></div>
+<div class="field" id="tireR17Field"><label for="tireR17">Резина R17</label><select id="tireR17"><option value="street" selected>Шоссейная</option><option value="dual">Дуал-спорт</option><option value="offroad">Внедорожная</option></select></div>
+</div></div>
+<div class="panel">
+<h2 class="panel-head">02 · СИЛОВАЯ <span class="tag">КОНФИГ</span><span class="collapse-icon">▼</span></h2>
+<div class="panel-body">
+<div class="switch-row" id="pedalRow"><label for="pedalMode">🚴 ПЕДАЛИ · PAS</label><div class="switch off" id="pedalSwitch"><input type="checkbox" id="pedalMode"></div></div>
+<div class="switch-row" id="fwRow"><label for="fwMode">⚡ FW (осл. поля)</label><div class="switch off" id="fwSwitch"><input type="checkbox" id="fwMode"></div></div>
+<div class="switch-row" id="regenRow"><label for="regenMode">🔋 РЕКУПЕРАЦИЯ</label><div class="switch on" id="regenSwitch"><input type="checkbox" id="regenMode" checked></div></div>
+<div class="switch-row winter" id="winterRow"><label for="winterMode">❄ ЗИМА ≤−1°C</label><div class="switch off" id="winterSwitch"><input type="checkbox" id="winterMode"></div></div>
+<div class="info-inline winter" id="winterInfo" style="display:none"></div>
+<div class="field" id="regenCurrentField"><label for="regenCurrent">Ток рекуп, А</label><input type="number" inputmode="decimal" id="regenCurrent" value="20" min="0" max="80" step="5"></div>
+<div class="field"><label for="motorCooling">Охлаждение</label><select id="motorCooling"><option value="none">Штатное</option><option value="ferro">Феррофлюид</option><option value="oil" selected>Масло+рад</option></select></div>
+<div class="field"><label for="voltageSelect">Напряжение</label><select id="voltageSelect"><option value="auto">АВТО</option><option value="36">36В</option><option value="48">48В</option><option value="52">52В</option><option value="60">60В</option><option value="72" selected>72В 20S</option><option value="84">84В 23S</option><option value="96">96В 26S</option></select></div>
+<div class="field"><label for="voltageMode">Точка V</label><select id="voltageMode"><option value="nominal">НОМ</option><option value="peak" selected>ПИК</option><option value="average">СРЕД</option><option value="low">НИЗК</option><option value="cutoff">ОТСЕЧ</option><option value="both">СРАВН 3</option><option value="both5">СРАВН 5</option></select></div>
+<div class="field"><label for="motorType">Тип привода</label><select id="motorType"><option value="geared">Редуктор</option><option value="dd" selected>DD прямой</option><option value="mid">Кареточный</option></select></div>
+<div class="field" id="motorTurnsField"><label for="motorTurns">Витки</label><input type="number" inputmode="decimal" id="motorTurns" value="5" min="1" max="30" step="1"></div>
+<div class="field"><label for="cellType">Ячейки</label><select id="cellType"><option value="sk" selected>SK 55Ah</option><option value="lg">LG M52VT</option><option value="china">YCYG</option></select></div>
+<div class="field"><label for="batterySOH">SOH, %</label><input type="number" inputmode="decimal" id="batterySOH" value="100" min="50" max="100" step="5"></div>
+<div class="field"><label for="assistMode">Ассистент</label><select id="assistMode"><option value="eco" selected>ЭКО</option><option value="normal">НОРМА</option><option value="sport">СПОРТ</option><option value="boost">ТУРБО</option></select></div>
+<div class="field disabled" id="riderPowerField"><label for="riderPower">Мощ. райдера, Вт</label><input type="number" inputmode="decimal" id="riderPower" value="0" min="0" max="400" step="10"></div>
+</div></div>
+<div class="panel">
+<h2 class="panel-head">03 · ПРОФИЛЬ <span class="tag">УСЛОВИЯ</span><span class="collapse-icon">▼</span></h2>
+<div class="panel-body">
+<div class="field style-field"><label for="rideStyle">🏍 СТИЛЬ ЕЗДЫ</label>
+<select id="rideStyle">
+<option value="calm">😌 Спокойный (20)</option>
+<option value="moderate">🙂 Умеренный (28)</option>
+<option value="normal" selected>🚴 Нормальный (36)</option>
+<option value="confident">🏃 Уверенный (45)</option>
+<option value="aggressive">🏍 Агрессивный (55)</option>
+<option value="extreme">🔥 Экстрим (70)</option>
+<option value="racing">🏎 Racing (85)</option>
+</select>
+</div>
+<div class="info-inline accent" id="styleInfo"></div>
+<div class="field"><label for="cityCycle">🚦 Загруженность</label><select id="cityCycle"><option value="1.0">1.00 свободно</option><option value="1.2">1.20</option><option value="1.4" selected>1.40 умеренно</option><option value="1.8">1.80 плотно</option><option value="2.0">2.00 пробки</option><option value="2.2">2.20 час пик</option><option value="2.4">2.40 глухая</option></select></div>
+<div class="field"><label for="trackPct">Трасса/Город, %</label><input type="number" inputmode="decimal" id="trackPct" value="0" min="0" max="100" step="5"></div>
+<div class="field"><label for="slope">Уклон, %</label><input type="number" inputmode="decimal" id="slope" value="0.5" min="-10" max="20" step="0.5"></div>
+<div class="field"><label for="headwind">Ветер, м/с</label><input type="number" inputmode="decimal" id="headwind" value="3" step="0.5"></div>
+<div class="weather-row">
+  <label for="weatherBtn">🌤 ПОГОДА СЕЙЧАС</label>
+  <button type="button" class="weather-btn" id="weatherBtn">ОБНОВИТЬ</button>
+</div>
+<div class="info-inline" id="weatherStatus" style="display:none"></div>
+<div class="switch-row" id="applyWeatherRow" style="margin-top:4px">
+  <label for="applyWeather">🌧 Погода/ночь → расход</label>
+  <div class="switch on" id="applyWeatherSwitch"><input type="checkbox" id="applyWeather" checked></div>
+</div>
+<div class="switch-row danger" id="hardWeatherCapRow" style="margin-top:2px">
+  <label for="hardWeatherCap">🛑 Жёсткий weather cap</label>
+  <div class="switch off" id="hardWeatherCapSwitch"><input type="checkbox" id="hardWeatherCap"></div>
+</div>
+<div class="info-inline mute">Погода выкл — не учитываются ни дождь/снег, ни фары. Жёсткий cap — потолок скорости по погоде (лёд→15, снег→25).</div>
+<div class="field"><label for="ambientTemp">🌡 Температура, °C</label><input type="number" inputmode="decimal" id="ambientTemp" value="27" min="-40" max="45" step="1" inputmode="decimal"></div>
+<div class="field"><label for="posture">Посадка</label><select id="posture"><option value="city" selected>Городская</option><option value="sport">Спортивная</option></select></div>
+<div class="field"><label for="surface">Покрытие</label><select id="surface"><option value="asphalt_smooth" selected>Асфальт гл.</option><option value="asphalt_rough">Асфальт шерш.</option><option value="concrete">Бетон</option><option value="dirt_dry">Грунт</option><option value="snow_packed">Снег</option><option value="ice">Лёд</option></select></div>
+<div class="field"><label for="tire">Шина</label><select id="tire"><option value="slick">Слик</option><option value="semi">Полуслик</option><option value="city" selected>Городская</option><option value="mtb_xc">MTB XC</option><option value="fat">Фэт</option></select></div>
+<div class="field"><label for="pressure">Давление, бар</label><input type="number" inputmode="decimal" id="pressure" value="2.6" min="0.5" max="8" step="0.1"></div>
+<div class="field"><label for="tariff">💡 Тариф, ₽/кВтч</label><input type="number" inputmode="decimal" id="tariff" value="3.08" min="0" max="50" step="0.01"></div>
+<div class="field"><label for="fuelPrice">⛽ Бензин, ₽/л</label><input type="number" inputmode="decimal" id="fuelPrice" value="76" min="0" max="200" step="1"></div>
+<div class="field"><label for="fuelRate">🚗 Расход, л/100</label><input type="number" inputmode="decimal" id="fuelRate" value="10.5" min="0" max="20" step="0.5"></div>
+<div class="field"><label for="yearKm">📅 Пробег/год, км</label><input type="number" inputmode="decimal" id="yearKm" value="3200" min="500" max="50000" step="500"></div>
+</div></div>
+<div class="route-wind-block" id="routeWindBlock">
+  <div class="rw-subtitle">
+    <b>Тап по карте</b> — точка A → B → C… (до 10). Тап между точками вставит новую на своё место, маркер можно перетащить.<br>
+    <b>ОПТ / СРЕД / ПЕСС</b> — общий расчёт на крейсерской скорости. <b>МАРШРУТ</b> — пошаговый: уклоны, ветер по каждому участку, светофоры туда и обратно.
+  </div>
+  <div class="rw-grid">
+    <div class="rw-col">
+      <h4>📍 Точки маршрута <span id="wpCount" style="color:var(--text-mute);font-size:9px;font-weight:400;margin-left:auto">0/10</span></h4>
+      <div id="waypointsList" class="waypoints-list"><div class="wp-empty">Тап по карте — добавить точку</div></div>
+      <div class="field" style="margin-top:3px"><label for="routeStart">A (lat,lon)</label><input type="text" id="routeStart" placeholder="55.0302,82.9204" style="text-align:left;font-size:10px"></div>
+      <div class="field"><label for="routeEnd" id="routeEndLabel">Финиш (lat,lon)</label><input type="text" id="routeEnd" placeholder="55.0415,82.9346" style="text-align:left;font-size:10px"></div>
+      <div class="wp-controls">
+        <button class="wp-btn" id="wpAddBtn" title="Добавить точку в центр карты">➕</button>
+        <button class="wp-btn" id="wpUndoBtn" title="Удалить последнюю">↩</button>
+        <button class="wp-btn" id="wpReverseBtn" title="Реверс маршрута">⇄</button>
+        <button class="wp-btn danger" id="wpClearBtn" title="Очистить всё">🗑</button>
+      </div>
+      <div class="field"><label for="routeMode">Профиль</label><select id="routeMode"><option value="bicycle">Велосипед</option><option value="road_bike">Шоссе</option><option value="mountain_bike">MTB</option></select></div>
+      <div class="switch-row" style="margin-bottom:0;margin-top:3px"><label for="routeRoundTrip">🔄 Туда-обратно</label><div class="switch on" id="routeRoundTripSwitch"><input type="checkbox" id="routeRoundTrip" checked></div></div>
+      <div class="field"><label for="uphillPct">Доля подъёмов, %</label><input type="number" inputmode="decimal" id="uphillPct" value="30" min="0" max="100" step="5"></div>
+      <div class="rw-actions">
+        <button class="rw-btn" id="routeFetchBtn">📡 Нужно ≥2 точки</button>
+        <button class="rw-btn secondary" id="retryOverpassBtn" style="display:none">↻ Повторить Overpass</button>
+      </div>
+    </div>
+    <div class="rw-col" style="border-left-color:var(--accent-2)">
+      <h4>🌬 Ветер и компонент</h4>
+      <div class="field"><label for="apiWindSpeed">Скорость, м/с</label><input type="number" inputmode="decimal" id="apiWindSpeed" value="3" readonly style="opacity:.7"></div>
+      <div class="field"><label for="apiWindDir">Направление, °</label><input type="number" inputmode="decimal" id="apiWindDir" value="0" readonly style="opacity:.7"></div>
+      <div class="field"><label for="apiRouteBearing">Азимут, °</label><input type="number" inputmode="decimal" id="apiRouteBearing" value="0" readonly style="opacity:.7"></div>
+      <div class="field"><label for="apiHeadwind">Встречный, м/с</label><input type="number" inputmode="decimal" id="apiHeadwind" value="0" readonly style="opacity:.7;color:var(--accent-2);font-weight:900"></div>
+      <div class="rw-actions"><button class="rw-btn secondary" id="applyWindBtn">➡ Применить</button></div>
+    </div>
+  </div>
+  <div class="map-wrap">
+    <div class="map-hint" id="mapHint">Тап — точка · два пальца — зум · маркер можно тащить</div>
+    <div class="map-controls">
+      <button class="map-ctrl-btn" id="mapCenterBtn">📍 GPS</button>
+      <button class="map-ctrl-btn clear" id="mapClearBtn">🗑 Сброс</button>
+    </div>
+    <div id="map"></div>
+  </div>
+  <div class="alt-switcher" id="altSwitcher"><span class="as-label">АЛЬТЕРНАТИВЫ:</span><div id="altBtns" style="display:flex;gap:4px;flex-wrap:wrap"></div><span class="alt-info" id="altInfo"></span></div>
+  <div class="elevation-wrap" id="elevationWrap">
+    <div class="el-title">ПРОФИЛЬ ВЫСОТ</div>
+    <canvas id="elevationCanvas"></canvas>
+    <div class="el-title" style="margin-top:6px">vMax физ · vRide (стиль + правила) · SOC · V · 🌡</div>
+    <canvas id="vmaxCanvas"></canvas>
+    <input type="range" id="elevationSlider" class="el-slider" min="0" max="1000" value="0" step="1">
+    <div class="el-info" id="elevationInfo">—</div>
+  </div>
+  <div class="rw-info" id="routeInfo">
+    <div class="rw-cell"><div class="l">Дистанция</div><div class="v" id="routeDist">—</div></div>
+    <div class="rw-cell"><div class="l">Набор</div><div class="v" id="routeGain">—</div></div>
+    <div class="rw-cell"><div class="l">Средний уклон</div><div class="v" id="routeSlopeAvg">—</div></div>
+    <div class="rw-cell orange"><div class="l">Макс. уклон</div><div class="v" id="routeSlopeMax">—</div></div>
+  </div>
+  <div class="rw-status" id="routeStatus"></div>
+</div>
+<button class="adv-toggle" id="advBtn">РАСШИРЕННЫЙ РЕЖИМ</button>
+<div class="adv-panel" id="advPanel">
+<div class="adv-note"><b>⚠ 0 = автоподбор.</b> Клик по label'у с ↺ — сброс к шаблону.</div>
+<div class="adv-recommend" id="advRecommend"></div>
+<div class="adv-col"><h4>⚙ МОТОР</h4>
+<div class="field" id="mMotorModelField"><label for="mMotorModel">Модель</label><select id="mMotorModel"></select></div>
+<div class="field"><label for="mMotorPower">Мощность, Вт</label><input type="number" inputmode="decimal" id="mMotorPower" value="5000" min="0" max="20000" step="100"></div>
+<div class="field" id="mMotorPeakField"><label for="mMotorPeak">Пик, Вт</label><input type="number" inputmode="decimal" id="mMotorPeak" value="10000" min="0" max="30000" step="500"></div>
+<div class="field"><label for="mMotorPrice">Цена, ₽</label><input type="number" inputmode="decimal" id="mMotorPrice" value="50000" min="0" max="500000" step="500"></div></div>
+<div class="adv-col"><h4>🎛 КОНТРОЛЛЕР</h4>
+<div class="field"><label for="mCtrlCurrent">Бат. ток, А</label><input type="number" inputmode="decimal" id="mCtrlCurrent" value="120" min="0" max="500" step="5"></div>
+<div class="field" id="mCtrlPhaseField"><label for="mCtrlPhase">Фаз. ток, А</label><input type="number" inputmode="decimal" id="mCtrlPhase" value="220" min="0" max="600" step="10"></div>
+<div class="field" id="mCtrlEffField"><label for="mCtrlEff">КПД, % (0=авто)</label><input type="number" inputmode="decimal" id="mCtrlEff" value="0" min="0" max="100" step="1"></div>
+<div class="field"><label for="mCtrlPrice">Цена, ₽</label><input type="number" inputmode="decimal" id="mCtrlPrice" value="15000" min="0" max="200000" step="500"></div></div>
+<div class="adv-col"><h4>🔋 АКБ</h4>
+<div class="field"><label for="mBattAh">Ёмкость, Ач</label><input type="number" inputmode="decimal" id="mBattAh" value="55" min="0" max="300" step="5"></div>
+<div class="field"><label for="mBattV">Напряжение, В</label><input type="number" inputmode="decimal" id="mBattV" value="72" min="0" max="150" step="1"></div>
+<div class="field"><label for="mBattMaxA">Макс. ток, А</label><input type="number" inputmode="decimal" id="mBattMaxA" value="150" min="0" max="500" step="10"></div>
+<div class="field"><label for="mBattPrice">Цена, ₽</label><input type="number" inputmode="decimal" id="mBattPrice" value="0" min="0" max="500000" step="1000"></div></div>
+<div class="adv-col"><h4>🚴 ЯВНАЯ СКОРОСТЬ (опц.)</h4>
+<div class="switch-row" id="speedProfileRow" style="margin-top:3px"><label for="useSpeedProfile">📈 Явная скорость</label><div class="switch off" id="speedProfileSwitch"><input type="checkbox" id="useSpeedProfile"></div></div>
+<div class="info-inline mute">ВКЛ — стиль игнорируется, ОПТ/СРЕД/ПЕСС для этой скорости.</div>
+<div class="field speed-field disabled" id="mMaxSpeedField"><label for="mMaxSpeed">Крейсерская, км/ч</label><input type="number" inputmode="decimal" id="mMaxSpeed" value="50" min="0" max="150" step="1"></div>
+<div class="field speed-field disabled" id="mMinSpeedField"><label for="mMinSpeed">Минималка, км/ч</label><input type="number" inputmode="decimal" id="mMinSpeed" value="5" min="0" max="100" step="1"></div>
+<div class="field speed-field disabled" id="mStopsPerKmField"><label for="mStopsPerKm">Разгонов/км</label><input type="number" inputmode="decimal" id="mStopsPerKm" value="1.5" min="0" max="10" step="0.5"></div>
+</div>
+<div class="adv-col" style="border-left-color:var(--green)"><h4>⚡ ПИК V</h4><div id="peakAtVTable" style="font-size:11px;line-height:1.4;color:var(--text-dim)"></div></div>
+<div class="adv-col"><h4>🔑 КАРТЫ</h4>
+<div class="field"><label for="geoKey">Свой ключ Geoapify</label><input type="text" id="geoKey" placeholder="встроенный" autocomplete="off" spellcheck="false"></div>
+<div class="info-inline mute">Пусто — используется встроенный ключ.</div></div>
+<button class="adv-reset" id="resetAdvBtn">↺ СБРОСИТЬ</button>
+</div>
+<button class="fire" id="calcBtn">ЗАПУСТИТЬ РАСЧЁТ</button>
+<div id="results">
+<div class="error-banner" id="errorBanner" role="alert"><div class="err-h">❌ ОШИБКА</div><div class="err-b" id="errorText"></div></div>
+<div class="banner winter" id="bannerWinter"></div>
+<div class="banner cold" id="bannerCold"></div>
+<div class="banner hot" id="bannerHot"></div>
+<div class="banner fw" id="bannerFw"></div>
+<div class="banner econ" id="bannerEcon"></div>
+<div class="banner avg-warn" id="bannerAvgWarn"></div>
+<div class="banner vride-warn" id="bannerVRideWarn"></div>
+<div class="banner heat-warn" id="bannerHeatWarn"></div>
+<div class="banner style-info" id="bannerStyleInfo"></div>
+<div class="summary-total animate-item">
+<div class="spec" id="specText">—</div>
+<div class="badge">РЕКОМЕНДАЦИЯ</div>
+<button class="copy" id="copyBtn">КОПИРОВАТЬ</button>
+<button class="save-txt" id="saveTxtBtn">TXT</button>
+<button class="save-txt" id="saveCsvBtn" title="Сегменты маршрута">CSV</button>
+<div class="price"><div class="lbl">ИТОГО</div><div class="num" id="totalPrice">0<small>₽</small></div></div>
+</div>
+<div class="gauges animate-item" id="gauges"></div>
+<div class="speed-panel animate-item" id="speedPanel"></div>
+<div class="voltage-compare" id="voltageCompare" style="display:none"></div>
+<div class="range-calc animate-item" id="rangeCalc">
+<div class="range-head"><label for="rangeDistance">Дистанция</label><input type="number" inputmode="decimal" id="rangeDistance" value="46" min="1" max="500" step="1"><span class="unit">км</span><div class="quick"><button data-dist="10">10</button><button data-dist="25">25</button><button data-dist="46" class="active">46</button><button data-dist="75">75</button><button data-dist="100">100</button></div></div>
+<div class="range-head"><label for="rangeCoastFactor">🍃 Накат</label><input type="number" inputmode="decimal" id="rangeCoastFactor" value="0" min="0" max="40" step="5"><span class="unit">%</span><div class="quick"><button data-coast="0" class="active">0</button><button data-coast="10">10</button><button data-coast="20">20</button><button data-coast="30">30</button><button data-coast="40">40</button></div></div>
+<div class="coast-hint">Бонус за плавный стиль езды.</div>
+<div class="range-rec" id="rangeRec"></div>
+<div class="range-scn" id="rangeScn"></div>
+<div class="range-sum" id="rangeSum"></div>
+<div class="range-advice" id="rangeAdvice"></div>
+</div>
+<div class="conclusions animate-item" id="conclusions"></div>
+<div class="etalon-section" id="etalonSection" style="display:none">
+  <button class="etalon-toggle" id="etalonToggle"><span class="etl-arrow">▼</span><span>ЭТАЛОННЫЙ РАСЧЁТ</span><span class="etl-badge">4 СТУПЕНИ</span></button>
+  <div class="etalon-block" id="etalonBlock"></div>
+</div>
+<button class="report-toggle animate-item" id="reportToggle"><span>РАСШИРЕННЫЙ ОТЧЁТ</span><span class="arrow">▼</span></button>
+<div class="advanced-report" id="advancedReport">
+  <div class="adv-controls" id="advControls">
+    <button data-adv="compact" class="active">📊 КОМПАКТ</button>
+    <button data-adv="full">📋 ПОЛНЫЙ</button>
+  </div>
+  <div class="adv-compact" id="advCompact"></div>
+  <div class="adv-full" id="advFull">
+    <div class="panel" style="grid-column:1/-1"><h2>04 · АНАЛИЗ СИЛ</h2><div class="panel-body" id="forces" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0 20px"></div></div>
+    <div class="blocks">
+      <div class="block"><h3>АЭРО</h3><div id="aero"></div></div>
+      <div class="block"><h3>ШИНА</h3><div id="tireCard"></div></div>
+      <div class="block"><h3>МОТОР</h3><div id="motorCard"></div></div>
+      <div class="block new"><h3>ОБМОТКА</h3><div id="windingCard"></div></div>
+      <div class="block new"><h3>ТОКИ</h3><div id="currentsCard"></div></div>
+      <div class="block new"><h3>ЭЛЕКТРИКА</h3><div id="electricCard"></div></div>
+      <div class="block new"><h3>vMax</h3><div id="vmaxCard"></div></div>
+      <div class="block new"><h3>PULSE</h3><div id="avgSpeedCard"></div></div>
+      <div class="block"><h3>АКБ</h3><div id="batteryCard"></div></div>
+      <div class="block"><h3>ТОРМОЗА</h3><div id="brakeCard"></div></div>
+      <div class="block new"><h3>РЕКУП</h3><div id="regenProCard"></div></div>
+      <div class="block new"><h3>ЗИМА</h3><div id="winterCard"></div></div>
+      <div class="block new"><h3>КОНТРОЛЛЕР</h3><div id="ctrlProCard"></div></div>
+      <div class="block new"><h3>ТЕПЛО</h3><div id="thermalProCard"></div></div>
+      <div class="block"><h3>КОМПЛЕКТ</h3><div id="kit"></div></div>
+      <div class="block"><h3>TCO 5 ЛЕТ</h3><div id="tcoCard"></div></div>
+      <div class="block new"><h3>VS БЕНЗИН</h3><div id="fuelCard"></div></div>
+    </div>
+    <div class="legal" id="legal"></div>
+  </div>
+</div>
+</div>
+<div class="foot"><i>City</i><b>Bike</b> · бортовой компьютер · <span id="versionLabel">V23</span> · <span id="footClock">--:--</span></div>
+</div>
+<script src="js/native.js"></script>
+<script src="leaflet/leaflet.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/loader.js"></script>
+
+</body>
+</html>
