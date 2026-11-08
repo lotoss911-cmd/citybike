@@ -4300,6 +4300,21 @@ button,input,select{font-family:inherit}
 
 
 <script>window.addEventListener("error",function(e){var d=document.getElementById("_err");if(!d){d=document.createElement("div");d.id="_err";d.style.cssText="position:fixed;top:0;left:0;right:0;background:#b00;color:#fff;z-index:999999;padding:8px;font:12px monospace";if(document.body)document.body.appendChild(d)}if(d)d.textContent="JS ERROR: "+e.message+" @ "+(e.filename||"").split("/").pop()+":"+e.lineno});</script>
+
+<script>
+(function () {
+  window.addEventListener('error', function (e) {
+    var m = String(e.message || '');
+    // "Script error." без файла и строки = кросс-доменный скрипт, деталей нет
+    if ((!e.filename || e.filename === '') && /^script error/i.test(m)) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    }
+  }, true);
+})();
+</script>
+
+<script src="https://telegram.org/js/telegram-web-app.js" crossorigin="anonymous"></script>
 </head>
 <body>
 <div class="rig">
@@ -5653,7 +5668,7 @@ function send(){
       document.body.appendChild(b);
     }
 
-    setTimeout(addButton, 1200);
+    setTimeout(addButton, 1500);
   } catch (e) {
     if (window.console) console.error('cb init:', e);
   }
