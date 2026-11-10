@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Панель дальности — CITY BIKE</title>
+<meta name="description" content="Одна панель: скорость, запас хода, расход и цена. Считает по настоящей физике, цифры — из прайса мастерской. CITY BIKE, Новосибирск.">
+<style>
+  :root{
+    --bg:#08070f;
+    --bg2:#0c0a17;
+    --panel:#120e22;
+    --panel2:#171130;
+    --line:rgba(168,122,255,.16);
+    --line2:rgba(168,122,255,.42);
+    --fg:#f4f0ff;
+    --muted:#958cb4;
+    --acc:#a87aff;
+    --acc2:#e276ff;
+    --warn:#ffcf6b;
+    --r:16px;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    background:
+      radial-gradient(900px 520px at 78% -8%, rgba(168,122,255,.15), transparent 62%),
+      radial-gradient(700px 420px at -10% 108%, rgba(226,118,255,.10), transparent 60%),
+      var(--bg);
+    color:var(--fg);
+    font:16px/1.45 "Segoe UI", system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .num{font-family:ui-monospace, SFMono-Regular, "Cascadia Mono", Menlo, Consolas, monospace; font-variant-numeric:tabular-nums}
+  .wrap{max-width:520px;margin:0 auto;padding:18px 16px 40px}
+
+  /* ---------- шапка ---------- */
+  .hdr{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+  .brand{display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+  .brand b{color:var(--fg);letter-spacing:.2em}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--acc2);box-shadow:0 0 12px var(--acc2)}
+  .gear{
+    appearance:none;-webkit-appearance:none;cursor:pointer;
+    min-height:44px;padding:0 12px;border-radius:10px;
+    background:transparent;border:1px dashed var(--line2);color:var(--muted);
+    font:inherit;font-size:12px;letter-spacing:.06em;
+  }
+  .gear[aria-expanded="true"]{color:var(--acc);border-style:solid}
+  .gear:focus-visible{outline:2px solid var(--acc2);outline-offset:2px}
+
+  /* ---------- панель ---------- */
+  .panel{
+    position:relative;
+    background:linear-gradient(180deg,var(--panel),var(--bg2));
+    border:1px solid var(--line);
+    border-radius:var(--r);
+    padding:16px 16px 18px;
+    overflow:hidden;
+  }
+  .panel::before{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(180deg,rgba(168,122,255,.09),transparent 46%);
+  }
+  .k{position:relative;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);text-align:center}
+
+  .dial{position:relative;width:100%;max-width:340px;margin:2px auto 0}
+  .dial svg{display:block;width:100%;height:auto;position:relative;z-index:1}
+  .arc-cv{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:2;mix-blend-mode:screen}
+  .needle{fill:#fff;stroke:none}
+  .needle-soft{fill:rgba(200,220,255,.32);stroke:none;filter:blur(3px)}
+  .tip{fill:#f2f7ff;filter:url(#glow)}
+  .dial-c{
+    position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;padding-top:23%;pointer-events:none;
+  }
+  .big{
+    font-size:clamp(58px,19vw,88px);line-height:.94;letter-spacing:-.045em;font-weight:600;color:#fff;
+    filter:drop-shadow(0 0 16px rgba(168,122,255,.55));
+  }
+  .unit{font-size:17px;color:var(--acc);letter-spacing:.1em;margin-top:4px}
+  .dial-sub{text-align:center;color:var(--muted);font-size:12.5px;letter-spacing:.03em;margin-top:-4px}
+  .dial-sub b{color:var(--fg);font-weight:600}
+  .tick-l{fill:var(--muted);font-size:11px;font-family:ui-monospace,Consolas,monospace;text-anchor:middle}
+  .tick-m{stroke:rgba(168,122,255,.34);stroke-width:2;stroke-linecap:round}
+  .tick-l,.tick-m{transition:opacity .2s}
+  .od{display:inline-flex;align-items:flex-start;justify-content:center;line-height:1;vertical-align:top}
+  .od-h,.od-d{display:block;height:1em;overflow:hidden;line-height:1}
+  .od-s{display:block;will-change:transform}
+  .od-s i{display:block;height:1em;line-height:1;font-style:normal;text-align:center}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+  .mini{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:14px;background:var(--line);border:1px solid var(--line);border-radius:11px;overflow:hidden}
+  .mini div{background:var(--panel);padding:9px 10px}
+  .mini .mk{font-size:10px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+  .mini .mv{font-size:18px;margin-top:2px;white-space:nowrap}
+  .mini .mu{font-size:10px;color:var(--muted);letter-spacing:.03em;margin-top:1px;white-space:nowrap}
+
+  .flag{position:relative;margin-top:10px;font-size:12.5px;color:var(--warn);min-height:0;line-height:1.4}
+  .flag:empty{display:none}
+  .flag.ok{color:var(--acc2)}
+
+  /* ---------- контролы ---------- */
+  .ctl{position:relative;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+  .ctl-h{display:flex;align-items:baseline;gap:8px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+  .ctl-h b{font-size:22px;letter-spacing:0;text-transform:none;color:var(--fg);margin-left:auto}
+  .ctl-h .u{font-size:12px;letter-spacing:.04em;color:var(--acc)}
+  .hint{color:var(--muted);font-size:11.5px;margin:0 0 2px;letter-spacing:.01em}
+
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;width:100%;height:44px;background:transparent;margin:0;
+  }
+  input[type=range]::-webkit-slider-runnable-track{
+    height:6px;border-radius:3px;
+    background:linear-gradient(90deg,var(--acc) var(--pct,40%), rgba(168,122,255,.18) var(--pct,40%));
+  }
+  input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:rgba(168,122,255,.18)}
+  input[type=range]::-moz-range-progress{height:6px;border-radius:3px;background:var(--acc)}
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;width:26px;height:26px;margin-top:-10px;border-radius:50%;
+    background:#fff;border:3px solid var(--acc);box-shadow:0 0 16px rgba(168,122,255,.55);cursor:pointer;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid var(--acc);
+    box-shadow:0 0 16px rgba(168,122,255,.55);cursor:pointer;
+  }
+  input[type=range]:focus-visible{outline:2px solid var(--acc2);outline-offset:4px;border-radius:4px}
+
+  .cmp{display:flex;gap:6px;margin-top:2px}
+  .cmp button{
+    appearance:none;flex:1;min-height:44px;cursor:pointer;
+    background:var(--panel2);border:1px solid var(--line);border-radius:9px;
+    color:var(--muted);font:inherit;font-size:11.5px;line-height:1.15;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+    transition:border-color .15s,background .15s,color .15s;
+  }
+  .cmp button b{font-family:ui-monospace,Consolas,monospace;font-size:14px;color:var(--fg)}
+  .cmp button[aria-pressed="true"]{border-color:var(--acc);background:linear-gradient(180deg,rgba(168,122,255,.2),rgba(168,122,255,.06));color:var(--acc)}
+  .cmp button[aria-pressed="true"] b{color:#fff}
+  .cmp button:focus-visible{outline:2px solid var(--acc2);outline-offset:2px}
+
+  /* ---------- график ---------- */
+  .chart{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+  .chart svg{display:block;width:100%;height:auto;cursor:crosshair;touch-action:manipulation}
+  .chart-x{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);letter-spacing:.04em;margin-top:2px}
+  .dotlab{fill:#fff;font-size:11.5px;font-family:ui-monospace,Consolas,monospace;text-anchor:middle}
+  .axgrid{stroke:rgba(168,122,255,.13);stroke-width:1}
+  .drop{stroke:rgba(226,118,255,.36);stroke-width:1;stroke-dasharray:3 3}
+  .trip-out{margin-top:10px;font-size:13.5px;color:var(--muted);line-height:1.5}
+  .trip-out b{color:#fff;font-weight:600}
+  .trip-out .t-per{display:block;color:var(--muted);font-size:11px;letter-spacing:.05em;margin-bottom:3px}
+
+  /* ---------- чипы ---------- */
+  .row{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+  .row:first-child{border-top:0;padding-top:0}
+  .lbl{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+  .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .chip{
+    appearance:none;-webkit-appearance:none;cursor:pointer;
+    min-height:44px;padding:5px 12px;border-radius:9px;
+    background:var(--panel2);color:var(--fg);border:1px solid var(--line);
+    font:inherit;font-size:13.5px;line-height:1.15;text-align:left;
+    display:flex;flex-direction:column;justify-content:center;gap:1px;
+    transition:border-color .15s,background .15s,box-shadow .15s;
+  }
+  .chip small{color:var(--muted);font-size:10.5px}
+  .chip:hover{border-color:var(--line2)}
+  .chip[aria-pressed="true"]{
+    border-color:var(--acc);
+    background:linear-gradient(180deg,rgba(168,122,255,.22),rgba(168,122,255,.07));
+    box-shadow:inset 0 0 0 1px rgba(168,122,255,.22),0 0 16px rgba(168,122,255,.14);
+  }
+  .chip[aria-pressed="true"] small{color:var(--acc)}
+  .chip:focus-visible{outline:2px solid var(--acc2);outline-offset:2px}
+
+  .ext{max-height:0;overflow:hidden;transition:max-height .42s cubic-bezier(.22,1,.36,1),opacity .3s;opacity:0}
+  .ext.open{max-height:420px;opacity:1}
+
+  /* ---------- смета ---------- */
+  .sum{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+  .sum div{display:flex;justify-content:space-between;gap:12px;color:var(--muted)}
+  .sum div span:last-child{color:var(--fg)}
+  .sum .tot{margin-top:4px;padding-top:10px;border-top:1px solid var(--line);align-items:baseline}
+  .sum .tot span:first-child{color:var(--fg);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase}
+  .sum .tot span:last-child{font-size:26px;letter-spacing:-.02em;font-weight:600;color:#fff}
+  .sum .w{font-size:11.5px;color:var(--muted);margin-top:-2px}
+
+  /* ---------- мягкий шаг к звонку ---------- */
+  .nudge{
+    margin-top:0;padding-top:0;border-top:0;
+    max-height:0;opacity:0;overflow:hidden;
+    transition:max-height .55s cubic-bezier(.22,1,.36,1),opacity .45s,margin-top .55s,padding-top .55s;
+  }
+  .nudge.on{
+    max-height:560px;opacity:1;
+    margin-top:14px;padding-top:14px;border-top:1px solid var(--line);
+  }
+  .nudge-k{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--acc);margin:0 0 6px}
+  .nudge p{margin:0 0 12px;font-size:13.5px;line-height:1.55;color:var(--muted)}
+  .nudge p b{color:var(--fg);font-weight:600}
+  .act{display:flex;flex-direction:column;gap:8px}
+  .btn{
+    appearance:none;display:flex;align-items:center;justify-content:center;gap:8px;
+    min-height:48px;padding:0 16px;border-radius:10px;
+    font:inherit;font-weight:600;font-size:15px;text-decoration:none;cursor:pointer;
+    border:1px solid var(--line2);color:var(--fg);background:transparent;width:100%;
+  }
+  .btn.primary{background:linear-gradient(135deg,var(--acc),var(--acc2));border-color:transparent;color:#140a24}
+  .btn.ghost{border-color:var(--line);color:var(--muted);font-weight:500;font-size:13.5px;min-height:44px}
+  .btn:focus-visible{outline:2px solid var(--acc2);outline-offset:2px}
+  .micro{margin:10px 0 0;font-size:11.5px;color:var(--muted);line-height:1.5}
+
+  /* ---------- сноски ---------- */
+  details{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+  details summary{cursor:pointer;color:var(--muted);font-size:12.5px;letter-spacing:.05em;list-style:none;display:flex;align-items:center;min-height:44px}
+  details summary::-webkit-details-marker{display:none}
+  details summary::before{content:"+ ";color:var(--acc)}
+  details[open] summary::before{content:"− "}
+  details:not([open]) > *:not(summary){display:none}
+  details p{margin:10px 0 0;color:var(--muted);font-size:12.5px;line-height:1.6}
+  details code{color:var(--acc);font-size:11.5px}
+  .foot{margin-top:20px;color:var(--muted);font-size:11.5px;line-height:1.6}
+  .foot b{color:var(--fg)}
+  .foot a{color:var(--acc);text-decoration:none;display:inline-flex;align-items:center;min-height:44px;padding:0 2px}
+
+  /* ---------- липкая полоса ---------- */
+  .bar{
+    position:fixed;left:0;right:0;bottom:0;z-index:6;
+    display:none;align-items:center;justify-content:space-between;gap:12px;
+    padding:9px 14px calc(9px + env(safe-area-inset-bottom));
+    background:rgba(10,8,18,.94);
+    border-top:1px solid var(--line2);
+    -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+  }
+  .bar .bl{display:flex;align-items:baseline;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap;min-width:0}
+  .bar .bl b{font-size:20px;color:#fff}
+  .bar .bl i{font-style:normal;color:var(--fg);overflow:hidden;text-overflow:ellipsis}
+  .bar a{
+    flex-shrink:0;min-height:44px;display:inline-flex;align-items:center;padding:0 14px;border-radius:9px;
+    border:1px solid var(--line2);color:var(--fg);background:transparent;font-weight:600;
+    font-size:13.5px;text-decoration:none;white-space:nowrap;
+  }
+  @media (max-width:959px){
+    .bar{display:flex}
+    .wrap{padding-bottom:78px}
+  }
+  @media (max-width:359px){
+    .wrap{padding-left:12px;padding-right:12px}
+    .brand{font-size:10px;letter-spacing:.08em;white-space:nowrap}
+    .brand b{letter-spacing:.12em}
+    .gear{font-size:11px;padding:0 9px;letter-spacing:.02em}
+    .chart-x span:nth-child(2){display:none}
+    .mini div{padding:8px 7px}
+    .mini .mk{font-size:9.5px;letter-spacing:.06em}
+    .mini .mv{font-size:16px}
+    .mini .mu{font-size:9.5px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none !important;animation:none !important}
+  }
+</style>
+</head>
+<body>
+<main class="wrap">
+
+  <header class="hdr">
+    <div class="brand"><b>CITY BIKE</b><i class="dot"></i>Новосибирск</div>
+    <button class="gear" id="gear" type="button" aria-expanded="false" aria-controls="ext">настройки ▾</button>
+  </header>
+
+  <section class="panel">
+
+    <div class="k">дальность на одном заряде</div>
+
+    <div class="dial">
+      <svg id="dialSvg" viewBox="14 16 292 218" aria-hidden="true">
+        <defs>
+          <linearGradient id="g1" x1="0" y1="1" x2="1" y2="0">
+            <stop offset="0" stop-color="#a87aff"/>
+            <stop offset="1" stop-color="#e276ff"/>
+          </linearGradient>
+          <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="3.5" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <path id="arcBg" fill="none" stroke="rgba(168,122,255,.14)" stroke-width="14" stroke-linecap="round"/>
+        <path id="arcFg" class="arc-fg" fill="none" stroke="url(#g1)" stroke-width="14" stroke-linecap="round" filter="url(#glow)"/>
+        <g id="ticksG"></g>
+        <g id="needleG" transform="rotate(-210 160 160)">
+          <path class="needle-soft" d="M 256 156.2 L 295 159.1 L 295 160.9 L 256 163.8 Z"/>
+          <path class="needle" d="M 258 157.6 L 296 159.7 L 296 160.3 L 258 162.4 Z"/>
+          <circle class="tip" cx="296" cy="160" r="2.8"/>
+        </g>
+      </svg>
+      <canvas class="arc-cv" id="arcCv"></canvas>
+      <div class="dial-c">
+        <div class="big num" id="big"><span class="od" id="od" aria-hidden="true"></span><span class="sr" id="bigSr">—</span></div>
+        <div class="unit">км</div>
+      </div>
+    </div>
+
+    <div class="dial-sub" id="dialSub">&nbsp;</div>
+
+    <div class="mini">
+      <div><div class="mk">расход</div><div class="mv num" id="mWhkm">—</div><div class="mu">Вт·ч/км</div></div>
+      <div><div class="mk">в пути</div><div class="mv num" id="mTime">—</div><div class="mu">ч : мин</div></div>
+      <div><div class="mk">зимой</div><div class="mv num" id="mWinter">—</div><div class="mu">км</div></div>
+    </div>
+
+    <div class="flag" id="flag" aria-live="polite"></div>
+
+    <!-- скорость -->
+    <div class="ctl">
+      <div class="ctl-h"><span>скорость</span><b class="num" id="spdOut">25</b><span class="u">км/ч</span></div>
+      <p class="hint">средняя за поездку — со светофорами и остановками, не «максималка» по паспорту</p>
+      <input id="speed" type="range" min="15" max="45" step="1" value="25" aria-label="Средняя скорость, км/ч">
+      <div class="cmp" id="cmp" role="group" aria-label="Сравнить скорые скорости"></div>
+    </div>
+
+    <!-- кривая -->
+    <div class="chart">
+      <svg id="chartSvg" viewBox="0 0 300 96" aria-label="Расход от скорости. Нажми на линию, чтобы сменить скорость.">
+        <defs>
+          <linearGradient id="gA" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="rgba(168,122,255,.42)"/>
+            <stop offset="1" stop-color="rgba(168,122,255,0)"/>
+          </linearGradient>
+        </defs>
+        <line class="axgrid" x1="0" y1="84" x2="300" y2="84"/>
+        <line class="axgrid" x1="0" y1="46" x2="300" y2="46"/>
+        <path id="cArea" fill="url(#gA)" d=""/>
+        <line id="cDrop" class="drop" x1="0" y1="0" x2="0" y2="84"/>
+        <path id="cLine" fill="none" stroke="#a87aff" stroke-width="2.4" stroke-linejoin="round" d=""/>
+        <circle id="cDot" r="4.5" fill="#e276ff" stroke="#fff" stroke-width="1.6"/>
+        <text class="dotlab" id="cLab" x="0" y="0"></text>
+      </svg>
+      <div class="chart-x"><span>10 км/ч</span><span>Вт·ч/км · жми по линии</span><span>50 км/ч</span></div>
+    </div>
+
+    <!-- батарея и режим -->
+    <div class="row">
+      <div class="lbl">режим дороги</div>
+      <div class="chips" id="routeChips" role="group" aria-label="Режим дороги"></div>
+    </div>
+    <div class="row">
+      <div class="lbl">аккумулятор · 48 В</div>
+      <div class="chips" id="ahChips" role="group" aria-label="Ёмкость аккумулятора"></div>
+    </div>
+
+    <!-- расширенная -->
+    <div class="ext" id="ext">
+      <div class="row">
+        <div class="lbl">мотор</div>
+        <div class="chips" id="kitChips" role="group" aria-label="Мотор"></div>
+      </div>
+      <div class="row">
+        <div class="lbl">ячейки</div>
+        <div class="chips" id="cellChips" role="group" aria-label="Тип ячеек"></div>
+      </div>
+      <div class="row">
+        <div class="lbl">твой вес</div>
+        <div class="chips" id="wChips" role="group" aria-label="Вес райдера"></div>
+      </div>
+    </div>
+
+    <!-- смета -->
+    <div class="sum">
+      <div><span id="pKitName">Комплект</span><span class="num" id="pKit">—</span></div>
+      <div><span id="pBatName">АКБ</span><span class="num" id="pBat">—</span></div>
+      <div><span id="pInsName">Установка</span><span class="num" id="pIns">—</span></div>
+      <div class="tot"><span>под ключ</span><span class="num" id="pTot">—</span></div>
+      <div class="w" id="pNote"></div>
+    </div>
+
+    <!-- хватит ли на мою дорогу -->
+    <div class="row">
+      <div class="lbl">твой путь в одну сторону</div>
+      <div class="chips" id="tripChips" role="group" aria-label="Путь в одну сторону, км"></div>
+      <div class="trip-out" id="tripOut" aria-live="polite">&nbsp;</div>
+    </div>
+
+    <!-- мягкий шаг -->
+    <section class="nudge" id="nudge">
+      <p class="nudge-k">если захочешь сверить с дорогой</p>
+      <p>Панель считает по формуле — <b><span id="nudgeKm">91</span> км — это средняя дорога</b>, а не твоя. Подъём, ветер, −25° и полный рюкзак снимают
+        с этой цифры десяток километров. Пять минут по телефону — и пробег станет под твой маршрут, а не средний по городу.</p>
+      <div class="act">
+        <a class="btn primary" href="tel:+79137585571">Позвонить · +7 913 758-55-71</a>
+        <a class="btn" href="https://t.me/citybike_nsk_bot" target="_blank" rel="noopener">Написать в Telegram</a>
+        <button class="btn ghost" id="copyBtn" type="button">Сохранить расчёт себе</button>
+      </div>
+      <p class="micro">Без обязательств: если твоему маршруту комплект не подходит — так и скажем, а не «приезжайте, посмотрим».
+        Мастерская на Вокзальной магистрали, 3.</p>
+    </section>
+
+  </section>
+
+  <details>
+    <summary>откуда цифры</summary>
+    <p>Мощность на дорогу: <code>P = crr·m·g·v + ½·ρ·CdA·v³</code> (crr 0,012 под МТБ-шины и вес, ρ 1,2 · CdA 0,42).
+      КПД мотор-колеса с контроллером 0,76 — не паспортные 0,9. Поправка дороги: ровно 1,00 · город 1,40
+      (старты, светофоры, торможения) · горки 1,75. Полезная ёмкость — 80 % от В·А·ч, пятую часть не выжимаем.
+      Зима — минус 25 %. Заряд: в батарее 960 Вт·ч, из розетки уходит ≈1,1 кВт·ч.
+      Цифры — оценка под среднюю дорогу, а не обещание; цены — из прайса мастерской, не оферта.</p>
+  </details>
+
+  <div class="foot">
+    <b>CITY BIKE</b> — Новосибирск, Вокзальная магистраль, 3. Ремонт, обслуживание, сборка электровелосипедов,
+    батареи и комплекты под твой маршрут. <a href="tel:+79137585571">+7 913 758-55-71</a> · <a href="https://t.me/citybike_nsk_bot" target="_blank" rel="noopener">@citybike_nsk_bot</a>
+  </div>
+
+</main>
+
+<div class="bar">
+  <div class="bl"><b class="num" id="barKm">—</b><span>км</span><i id="barSub"></i></div>
+  <a href="tel:+79137585571">Позвонить</a>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ================= данные (прайс: shared/prices.json) ================= */
+  var KITS = [
+    { w: 250,  price: 19000, coef: 0.70, mass: 20, minV: 36, maxV: 48, name: 'Комплект 250 Вт' },
+    { w: 500,  price: 21900, coef: 0.95, mass: 22, minV: 36, maxV: 60, name: 'Комплект 500 Вт' },
+    { w: 1000, price: 34900, coef: 0.95, mass: 26, minV: 48, maxV: 72, name: 'Комплект 1000 Вт' }
+  ];
+  var LADDER = {
+    china: { 20: 22620, 30: 35080, 40: 47580, 55: 66200 },
+    lg:    { 20: 34900, 30: 50900, 40: 65900, 55: 89250 }
+  };
+  var CELLS = {
+    china: { name: 'China A+', note: 'цена ниже' },
+    lg:    { name: 'LG M52VT', note: 'ресурс, мороз' }
+  };
+  var ROUTE = [
+    { id: 'flat',  name: 'ровно', f: 1.00 },
+    { id: 'city',  name: 'город', f: 1.40 },
+    { id: 'hills', name: 'горки', f: 1.75 }
+  ];
+  var INSTALL = 8500, INSTALL_HIGH = 9900, VOLT = 48;
+  /* уличные коэффициенты: МТБ-шины, тяжёлый райдер, КПД мотор-колеса с контроллером */
+  var CRR = 0.012, ETA = 0.76, AERO = 0.5 * 1.2 * 0.42, CHARGE_ETA = 0.88;
+  var SPEEDS_COMPARE = [20, 25, 35];
+
+  var st = { speed: 25, route: 'city', ah: 20, cells: 'china', kit: 500, weight: 80, trip: 8 };
+
+  /* ================= утилиты ================= */
+  var $ = function (id) { return document.getElementById(id); };
+  var RUB = ' \u20bd';
+
+  function fmt(n) {
+    n = Math.round(n);
+    var s = String(Math.abs(n)), out = '', c = 0;
+    for (var i = s.length - 1; i >= 0; i--) {
+      out = s[i] + out;
+      if (++c % 3 === 0 && i > 0) out = '\u2009' + out;
+    }
+    return (n < 0 ? '\u2212' : '') + out;
+  }
+  function fmt1(n) { return n.toFixed(1).replace('.', ','); }
+  function hm(h) {
+    var hh = Math.floor(h), mm = Math.round((h - hh) * 60);
+    if (mm === 60) { hh++; mm = 0; }
+    return hh + ':' + (mm < 10 ? '0' : '') + mm;
+  }
+  function plural(n, one, few, many) {
+    var a = n % 10, b = n % 100;
+    if (a === 1 && b !== 11) return one;
+    if (a >= 2 && a <= 4 && (b < 10 || b >= 20)) return few;
+    return many;
+  }
+
+  function kit() { for (var i = 0; i < KITS.length; i++) if (KITS[i].w === st.kit) return KITS[i]; return KITS[1]; }
+  function route() { for (var i = 0; i < ROUTE.length; i++) if (ROUTE[i].id === st.route) return ROUTE[i]; return ROUTE[1]; }
+
+  /* ================= физика ================= */
+  function whkmAt(spd) {
+    var k = kit(), m = st.weight + k.mass, v = spd / 3.6;
+    var P = CRR * m * 9.81 * v + AERO * v * v * v;
+    return (P / ETA) / spd * route().f;
+  }
+  function usableWh() { return 0.8 * VOLT * st.ah; }
+  function rangeAt(spd) {
+    return usableWh() / Math.max(whkmAt(spd), 0.1);
+  }
+  function calc() {
+    var k = kit(), m = st.weight + k.mass, v = st.speed / 3.6;
+    var P = CRR * m * 9.81 * v + AERO * v * v * v;
+    var draw = P / ETA;
+    var rr = (draw / st.speed) * route().f;
+    var usable = usableWh();
+    var range = usable / Math.max(rr, 0.1);
+    return {
+      m: m, P: P, draw: draw, whkm: rr, usable: usable, range: range,
+      hours: range / st.speed, winter: range * 0.75,
+      nominal: VOLT * st.ah, socket: (VOLT * st.ah) / CHARGE_ETA,
+      cap: Math.round(VOLT * k.coef), k: k
+    };
+  }
+
+  /* ================= приборная дуга ================= */
+  var CX = 160, CY = 160, R = 126, A0 = 210, SW = 240;
+  var arcBg = $('arcBg'), arcFg = $('arcFg'), ticksG = $('ticksG'), dialSvg = $('dialSvg');
+  var LEN = 0, curMax = 0, curN = 0;
+
+  function pol(deg) {
+    var r = deg * Math.PI / 180;
+    return [CX + R * Math.cos(r), CY - R * Math.sin(r)];
+  }
+  (function buildArc() {
+    var p0 = pol(A0), p1 = pol(A0 - SW);
+    var d = 'M ' + p0[0].toFixed(2) + ' ' + p0[1].toFixed(2) +
+            ' A ' + R + ' ' + R + ' 0 1 1 ' + p1[0].toFixed(2) + ' ' + p1[1].toFixed(2);
+    arcBg.setAttribute('d', d);
+    arcFg.setAttribute('d', d);
+    LEN = arcFg.getTotalLength();
+    arcFg.style.strokeDasharray = LEN;
+    arcFg.style.strokeDashoffset = LEN;
+  })();
+
+  function scaleFor(range) {
+    var target = Math.max(range * 1.08, 40);
+    var raw = target / 5;
+    var mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    var n = raw / mag, step;
+    if (n <= 1) step = 1;
+    else if (n <= 2) step = 2;
+    else if (n <= 2.5) step = 2.5;
+    else if (n <= 5) step = 5;
+    else step = 10;
+    step *= mag;
+    var max = Math.ceil(target / step) * step;
+    return { max: max, N: Math.round(max / step) };
+  }
+  function svgEl(n, a) {
+    var e = document.createElementNS('http://www.w3.org/2000/svg', n);
+    for (var k in a) e.setAttribute(k, a[k]);
+    return e;
+  }
+  function buildTicks(max, N) {
+    curMax = max;
+    ticksG.textContent = '';
+    for (var i = 0; i <= N; i++) {
+      var val = max * i / N, ang = A0 - SW * (i / N);
+      var rr = ang * Math.PI / 180;
+      var r1 = R + 11, r2 = R + 3;
+      ticksG.appendChild(svgEl('line', {
+        class: 'tick-m',
+        x1: CX + r2 * Math.cos(rr), y1: CY - r2 * Math.sin(rr),
+        x2: CX + r1 * Math.cos(rr), y2: CY - r1 * Math.sin(rr)
+      }));
+      var rl = R - 34;
+      ticksG.appendChild(svgEl('text', {
+        class: 'tick-l',
+        x: CX + rl * Math.cos(rr), y: CY - rl * Math.sin(rr) + 4
+      })).textContent = Math.round(val);
+    }
+  }
+
+  /* ================= плавный ход приборов (один rAF на всё) ================= */
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var needleG = $('needleG');
+  var VBX = 14, VBY = 16, VW = 292;
+  var setTxt = function (el, s) { if (el && el.__s !== s) { el.__s = s; el.textContent = s; } };
+
+  var A = { v: 0, wh: 0, roll: 0, troll: 0, tgt: 0, twh: 0, max: 1, tmax: 1, tau: 0.15, raf: 0, last: 0 };
+
+  /* цифры как в одометре: старшие — ступенями, младшая — рулоном */
+  var odEl = $('od'), odH = [], odStrip = null, odAcc = 0, odPrev = null;
+  (function buildOdometer() {
+    for (var i = 0; i < 2; i++) {
+      var h = document.createElement('span');
+      h.className = 'od-h';
+      odEl.appendChild(h);
+      odH.push(h);
+    }
+    var cell = document.createElement('span');
+    cell.className = 'od-d';
+    var strip = document.createElement('span');
+    strip.className = 'od-s';
+    for (var k = 0; k <= 10; k++) {
+      var g = document.createElement('i');
+      g.textContent = String(k % 10);
+      strip.appendChild(g);
+    }
+    cell.appendChild(strip);
+    odEl.appendChild(cell);
+    odStrip = strip;
+  })();
+
+  function paintOdometer(v) {
+    var whole = Math.max(0, Math.floor(v + 1e-6));
+    var units = whole % 10, tens = Math.floor(whole / 10) % 10, hund = Math.floor(whole / 100) % 10;
+    if (odPrev === null || Math.abs(v - odPrev) > 8) odAcc = v % 10;
+    else {
+      odAcc += v - odPrev;
+      while (odAcc >= 10) odAcc -= 10;
+      while (odAcc < 0) odAcc += 10;
+    }
+    odPrev = v;
+    odStrip.style.transform = 'translateY(' + (-odAcc).toFixed(3) + 'em)';
+
+    if (odH[0].__d !== hund) { odH[0].__d = hund; odH[0].textContent = String(hund); }
+    if (odH[1].__d !== tens) { odH[1].__d = tens; odH[1].textContent = String(tens); }
+    var sh = whole >= 100, stt = whole >= 10;
+    if (odH[0].__v !== sh) { odH[0].__v = sh; odH[0].style.display = sh ? 'block' : 'none'; }
+    if (odH[1].__v !== stt) { odH[1].__v = stt; odH[1].style.display = stt ? 'block' : 'none'; }
+  }
+
+  function paint() {
+    var p = A.max > 0 ? Math.min(1, Math.max(0, A.v / A.max)) : 0;
+    arcFg.style.strokeDashoffset = (LEN * (1 - p)).toFixed(2);
+    needleG.setAttribute('transform', 'rotate(' + (-(A0 - SW * p)).toFixed(2) + ' ' + CX + ' ' + CY + ')');
+    paintOdometer(A.roll);
+    setTxt($('bigSr'), fmt(A.roll) + ' км');
+    setTxt($('mWhkm'), fmt1(A.wh));
+    setTxt($('mWinter'), fmt(A.v * 0.75));
+    setTxt($('mTime'), hm(A.v / Math.max(st.speed, 1)));
+    setTxt($('nudgeKm'), fmt(A.v));
+    setTxt($('barKm'), fmt(A.roll));
+  }
+
+  function loop(now) {
+    var dt = A.last ? Math.min(0.05, (now - A.last) / 1000) : 0.016;
+    A.last = now;
+    var k = reduce ? 1 : 1 - Math.exp(-dt / A.tau);
+    var km = reduce ? 1 : 1 - Math.exp(-dt / 0.30);
+    A.v += (A.tgt - A.v) * k;
+    A.wh += (A.twh - A.wh) * k;
+    A.roll += (A.troll - A.roll) * (reduce ? 1 : 1 - Math.exp(-dt / 0.17));
+    A.max += (A.tmax - A.max) * km;
+    if (Math.abs(A.tgt - A.v) < 0.03) A.v = A.tgt;
+    if (Math.abs(A.twh - A.wh) < 0.02) A.wh = A.twh;
+    if (Math.abs(A.troll - A.roll) < 0.01) A.roll = A.troll;
+    if (Math.abs(A.tmax - A.max) < 0.4) A.max = A.tmax;
+    paint();
+    if (A.v !== A.tgt || A.wh !== A.twh || A.roll !== A.troll || A.max !== A.tmax) A.raf = requestAnimationFrame(loop);
+    else A.raf = 0;
+  }
+  function kick() {
+    if (document.hidden) { A.v = A.tgt; A.wh = A.twh; A.roll = A.troll; A.max = A.tmax; paint(); return; }
+    if (!A.raf) { A.last = 0; A.raf = requestAnimationFrame(loop); }
+  }
+
+  /* ================= разряды на дуге (canvas, сложение света) ================= */
+  var cv = $('arcCv'), acx = cv.getContext('2d');
+  var cvs = 1, arcs = [], sparks = [], arcRaf = 0, arcLast = 0;
+
+  function cvFit() {
+    var r = cv.getBoundingClientRect();
+    if (!r.width) return;
+    var dpr = Math.min(2, window.devicePixelRatio || 1);
+    cv.width = Math.round(r.width * dpr);
+    cv.height = Math.round(r.height * dpr);
+    acx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    acx.lineCap = 'round';
+    acx.lineJoin = 'round';
+    cvs = r.width / VW;
+  }
+  function toCv(x, y) { return [(x - VBX) * cvs, (y - VBY) * cvs]; }
+
+  function jagged(x1, y1, x2, y2, amp, depth) {
+    var pts = [[x1, y1], [x2, y2]], d = amp, lvl, out, i, a, b, mx, my, dx, dy, ln, nx, ny;
+    for (lvl = 0; lvl < depth; lvl++) {
+      out = [pts[0]];
+      for (i = 0; i < pts.length - 1; i++) {
+        a = pts[i]; b = pts[i + 1];
+        mx = (a[0] + b[0]) / 2; my = (a[1] + b[1]) / 2;
+        dx = b[0] - a[0]; dy = b[1] - a[1];
+        ln = Math.sqrt(dx * dx + dy * dy) || 1;
+        nx = -dy / ln; ny = dx / ln;
+        var off = (Math.random() * 2 - 1) * d;
+        out.push([mx + nx * off, my + ny * off], b);
+      }
+      pts = out; d *= 0.56;
+    }
+    return pts;
+  }
+
+  function strokePts(pts) {
+    acx.beginPath();
+    acx.moveTo(pts[0][0], pts[0][1]);
+    for (var i = 1; i < pts.length; i++) acx.lineTo(pts[i][0], pts[i][1]);
+    acx.stroke();
+  }
+
+  function addBolt(power, nearHead) {
+    var p = A.max > 0 ? Math.min(1, Math.max(0, A.v / A.max)) : 0.5;
+    var head = A0 - SW * p;
+    var base = head + (Math.random() * 2 - 1) * (nearHead ? 30 : 78);
+    var s = pol(base), e, rr, deg;
+    var kind = Math.random();
+    if (kind < 0.38) {
+      /* вдоль дуги — ток бежит по треку */
+      deg = base + (Math.random() < 0.5 ? -1 : 1) * (7 + Math.random() * 20);
+      rr = R + (Math.random() * 5 - 2.5);
+    } else if (kind < 0.86) {
+      /* наружу от дуги — разряд в воздух */
+      deg = base + (Math.random() * 14 - 7);
+      rr = R + 12 + Math.random() * 62;
+    } else {
+      /* внутрь, к центру — редкий сильный пробой */
+      deg = base + (Math.random() * 30 - 15);
+      rr = R - 34 - Math.random() * 44;
+    }
+    e = [CX + rr * Math.cos(deg * Math.PI / 180), CY - rr * Math.sin(deg * Math.PI / 180)];
+    var a = toCv(s[0], s[1]), b = toCv(e[0], e[1]);
+    var main = jagged(a[0], a[1], b[0], b[1], Math.random() * 9 + 4, 5);
+    var br = [], nb = 1 + (Math.random() < 0.55 ? 1 : 0), i, at, ang, len;
+    for (i = 0; i < nb; i++) {
+      at = main[Math.floor(main.length * (0.18 + Math.random() * 0.62))];
+      ang = Math.random() * 6.2832; len = 10 + Math.random() * 28;
+      br.push(jagged(at[0], at[1], at[0] + Math.cos(ang) * len, at[1] + Math.sin(ang) * len, 4, 3));
+    }
+    arcs.push({
+      main: main, br: br, hot: [a[0], a[1]],
+      t0: performance.now() + Math.random() * 70, life: 150 + Math.random() * 240, power: power || 1
+    });
+    if (arcs.length > 4) arcs.shift();
+    var n = 5 + Math.round(Math.random() * 8), j;
+    for (j = 0; j < n; j++) {
+      sparks.push({
+        x: a[0], y: a[1],
+        vx: (Math.random() * 2 - 1) * 2.2, vy: (Math.random() * 2 - 1) * 2.2 - 0.6,
+        t0: performance.now(), life: 220 + Math.random() * 420, r: 0.7 + Math.random() * 1.2
+      });
+    }
+  }
+
+  function fireArc(power) {
+    if (reduce || document.hidden) return;
+    if (!cvs) cvFit();
+    var count = 1 + (Math.random() < 0.6 ? 1 : 0) + (Math.random() < 0.22 ? 1 : 0);
+    var near = Math.random() < 0.72;
+    for (var n = 0; n < count; n++) addBolt(power || 1, near);
+    arcKick();
+  }
+
+  function arcKick() { if (!arcRaf) { arcLast = 0; arcRaf = requestAnimationFrame(arcLoop); } }
+
+  function arcLoop(now) {
+    if (!cvs) cvFit();
+    var dt = arcLast ? Math.min(0.06, (now - arcLast) / 1000) : 0.016;
+    arcLast = now;
+    acx.clearRect(0, 0, cv.width, cv.height);
+    acx.globalCompositeOperation = 'lighter';
+    var i, k, o, t, e, a;
+    for (i = sparks.length - 1; i >= 0; i--) {
+      var sp = sparks[i]; t = (now - sp.t0) / sp.life;
+      if (t >= 1) { sparks.splice(i, 1); continue; }
+      sp.x += sp.vx * dt * 60; sp.y += sp.vy * dt * 60; sp.vy += 0.05 * dt * 60;
+      acx.globalAlpha = (1 - t) * 0.7;
+      acx.fillStyle = 'rgba(196,222,255,1)';
+      acx.beginPath();
+      acx.arc(sp.x, sp.y, sp.r * (1 - t * 0.5), 0, 6.2832);
+      acx.fill();
+    }
+    for (i = arcs.length - 1; i >= 0; i--) {
+      o = arcs[i]; t = (now - o.t0) / o.life;
+      if (t >= 1) { arcs.splice(i, 1); continue; }
+      e = t < 0.12 ? t / 0.12 : 1 - (t - 0.12) / 0.88;
+      a = Math.max(0, e) * (0.62 + Math.random() * 0.38) * o.power;
+      var g = acx.createRadialGradient(o.hot[0], o.hot[1], 0, o.hot[0], o.hot[1], 17);
+      g.addColorStop(0, 'rgba(232,242,255,' + (0.8 * a).toFixed(3) + ')');
+      g.addColorStop(0.45, 'rgba(160,196,255,' + (0.22 * a).toFixed(3) + ')');
+      g.addColorStop(1, 'rgba(120,160,255,0)');
+      acx.globalAlpha = 1;
+      acx.fillStyle = g;
+      acx.beginPath();
+      acx.arc(o.hot[0], o.hot[1], 17, 0, 6.2832);
+      acx.fill();
+      acx.strokeStyle = 'rgba(108,158,255,1)';
+      acx.globalAlpha = 0.12 * a; acx.lineWidth = 12; strokePts(o.main);
+      acx.strokeStyle = 'rgba(150,196,255,1)';
+      acx.globalAlpha = 0.34 * a; acx.lineWidth = 3.8; strokePts(o.main);
+      acx.strokeStyle = 'rgba(243,248,255,1)';
+      acx.globalAlpha = 0.96 * a; acx.lineWidth = 1.45; strokePts(o.main);
+      for (k = 0; k < o.br.length; k++) {
+        acx.strokeStyle = 'rgba(150,196,255,1)';
+        acx.globalAlpha = 0.2 * a; acx.lineWidth = 2.4; strokePts(o.br[k]);
+        acx.strokeStyle = 'rgba(240,246,255,1)';
+        acx.globalAlpha = 0.68 * a; acx.lineWidth = 0.95; strokePts(o.br[k]);
+      }
+    }
+    acx.globalAlpha = 1;
+    acx.globalCompositeOperation = 'source-over';
+    if (arcs.length || sparks.length) arcRaf = requestAnimationFrame(arcLoop);
+    else { arcRaf = 0; acx.clearRect(0, 0, cv.width, cv.height); }
+  }
+
+  /* ================= график ================= */
+  var chart = $('chartSvg'), cArea = $('cArea'), cLine = $('cLine'), cDot = $('cDot'), cLab = $('cLab'), cDrop = $('cDrop');
+  var PADL = 8, PADR = 10, Y0 = 84, Y1 = 10;
+  function xOf(spd) { return PADL + (spd - 10) / 40 * (300 - PADL - PADR); }
+  function yOf(v, max) { return Y0 - (v / max) * (Y0 - Y1); }
+
+  function drawChart() {
+    var pts = [], max = 0, s;
+    for (s = 10; s <= 50; s++) { var v = whkmAt(s); pts.push([s, v]); if (v > max) max = v; }
+    max = Math.ceil(max / 5) * 5;
+    var d = '', area = '';
+    for (var i = 0; i < pts.length; i++) {
+      var x = xOf(pts[i][0]), y = yOf(pts[i][1], max);
+      d += (i ? ' L ' : 'M ') + x.toFixed(1) + ' ' + y.toFixed(1);
+      area += (i ? ' L ' : 'M ') + x.toFixed(1) + ' ' + y.toFixed(1);
+    }
+    area += ' L ' + xOf(50).toFixed(1) + ' ' + Y0 + ' L ' + xOf(10).toFixed(1) + ' ' + Y0 + ' Z';
+    cLine.setAttribute('d', d);
+    cArea.setAttribute('d', area);
+
+    var sv = Math.min(45, Math.max(15, st.speed));
+    var cv = whkmAt(sv);
+    cDot.setAttribute('cx', xOf(sv).toFixed(1));
+    cDot.setAttribute('cy', yOf(cv, max).toFixed(1));
+    cDrop.setAttribute('x1', xOf(sv).toFixed(1));
+    cDrop.setAttribute('x2', xOf(sv).toFixed(1));
+    cDrop.setAttribute('y1', yOf(cv, max).toFixed(1));
+    cDrop.setAttribute('y2', Y0);
+    cLab.setAttribute('x', Math.min(276, Math.max(24, xOf(sv))).toFixed(1));
+    cLab.setAttribute('y', Math.max(14, yOf(cv, max) - 9).toFixed(1));
+    cLab.textContent = fmt1(cv);
+  }
+
+  chart.addEventListener('click', function (e) {
+    var r = chart.getBoundingClientRect();
+    var x = (e.clientX - r.left) / r.width * 300;
+    var spd = Math.round(10 + (x - PADL) / (300 - PADL - PADR) * 40);
+    setSpeed(Math.min(45, Math.max(15, spd)));
+  });
+
+  /* ================= мягкий шаг ================= */
+  var nudge = $('nudge'), touched = false;
+  function revealNudge() {
+    if (touched) return;
+    touched = true;
+    setTimeout(function () { nudge.classList.add('on'); }, 420);
+  }
+  setTimeout(function () { if (!touched) { touched = true; nudge.classList.add('on'); } }, 14000);
+
+  /* ================= чипы (одна сборка, потом только состояние) ================= */
+  function chips(box, items, onPick) {
+    box.textContent = '';
+    var out = [];
+    items.forEach(function (it) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip';
+      b.__key = String(it.key);
+      b.setAttribute('aria-pressed', 'false');
+      var s = document.createElement('span');
+      s.textContent = it.name;
+      b.appendChild(s);
+      if (it.sub) {
+        var sm = document.createElement('small');
+        sm.textContent = it.sub;
+        b.appendChild(sm);
+      }
+      b.addEventListener('click', function () { onPick(it.key); revealNudge(); });
+      box.appendChild(b);
+      out.push(b);
+    });
+    box.__btns = out;
+    return out;
+  }
+  function syncChips(box, active) {
+    var btns = box.__btns || [];
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].setAttribute('aria-pressed', String(btns[i].__key === String(active)));
+    }
+  }
+
+  function setSpeed(v) {
+    st.speed = v;
+    $('speed').value = v;
+    A.tau = 0.075;
+    fireArc(0.8);
+    render();
+    clearTimeout(dragEnd);
+    dragEnd = setTimeout(function () { A.tau = 0.16; }, 200);
+    revealNudge();
+  }
+
+  /* ================= сборка интерфейса (один раз) ================= */
+  function buildUi() {
+    chips($('routeChips'), ROUTE.map(function (r) { return { key: r.id, name: r.name }; }),
+      function (k) { st.route = k; fireArc(0.7); render(); });
+    chips($('ahChips'), [20, 30, 40, 55].map(function (a) {
+      return { key: a, name: a + ' А·ч', sub: fmt(LADDER[st.cells][a]) + RUB };
+    }), function (a) { st.ah = a; fireArc(0.9); render(); });
+    chips($('kitChips'), KITS.map(function (k) {
+      return { key: k.w, name: k.w + ' Вт', sub: fmt(k.price) + RUB };
+    }), function (w) { st.kit = w; fireArc(0.8); render(); });
+    chips($('cellChips'), Object.keys(CELLS).map(function (id) {
+      return { key: id, name: CELLS[id].name, sub: CELLS[id].note };
+    }), function (id) { st.cells = id; fireArc(0.6); render(); });
+    chips($('wChips'), [60, 75, 80, 90, 105].map(function (w) {
+      return { key: w, name: w + ' кг' };
+    }), function (w) { st.weight = w; fireArc(0.6); render(); });
+    chips($('tripChips'), [4, 8, 12, 20].map(function (d) {
+      return { key: d, name: d + ' км' };
+    }), function (d) { st.trip = d; render(); });
+
+    var cmp = $('cmp');
+    SPEEDS_COMPARE.forEach(function (s) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.__s = s;
+      b.innerHTML = '<span>' + s + ' км/ч</span>';
+      var bb = document.createElement('b');
+      b.appendChild(bb);
+      b.__b = bb;
+      b.addEventListener('click', function () { setSpeed(s); });
+      cmp.appendChild(b);
+    });
+  }
+
+  function daysTxt(n) {
+    if (n >= 0.95) return n % 1 ? fmt1(n) + ' дня' : fmt(n) + ' ' + plural(n, 'день', 'дня', 'дней');
+    return 'меньше одного дня';
+  }
+
+  /* ================= рендер ================= */
+  function render() {
+    var i;
+    st.speed = Math.min(45, Math.max(15, st.speed));
+    var c = calc();
+
+    /* шкала с гистерезисом: под ползунком не перескакивает */
+    if (!curMax || c.range * 1.10 > curMax || c.range < curMax * 0.60) {
+      var sc = scaleFor(c.range);
+      if (sc.max !== curMax || sc.N !== curN) { buildTicks(sc.max, sc.N); curN = sc.N; }
+    }
+    A.tgt = c.range;
+    A.twh = c.whkm;
+    A.troll = Math.round(c.range);
+    A.tmax = Math.max(curMax, 1);
+    kick();
+
+    $('dialSub').innerHTML = route().name + ' · <b>' + VOLT + ' В · ' + st.ah + ' А·ч</b> · ' + c.m + ' кг';
+    $('spdOut').textContent = st.speed;
+    $('speed').style.setProperty('--pct', ((st.speed - 15) / 30 * 100) + '%');
+
+    /* сравнение скоростей */
+    var cmpBtns = $('cmp').children;
+    for (i = 0; i < cmpBtns.length; i++) {
+      cmpBtns[i].setAttribute('aria-pressed', String(cmpBtns[i].__s === st.speed));
+      setTxt(cmpBtns[i].__b, fmt(rangeAt(cmpBtns[i].__s)) + ' км');
+    }
+
+    /* флаги — одна строка, без давления */
+    var f;
+    if (st.speed > c.cap) f = 'потолок этого мотора на ' + VOLT + ' В — около ' + c.cap + ' км/ч, выше он не поедет';
+    else if (c.P > c.k.w) f = 'мотор ' + c.k.w + ' Вт на ' + st.speed + ' км/ч работает на пределе — комфортнее до ' + Math.max(10, Math.floor(st.speed * 0.8)) + ' км/ч';
+    else if (c.range > 120) f = 'больше 120 км — только по ровному и без ветра: город и подъёмы снимают четверть';
+    else f = 'комплект ровный — мотор и батарея подходят';
+    var ok = f.indexOf('комплект ровный') === 0;
+    $('flag').className = 'flag' + (ok ? ' ok' : '');
+    $('flag').textContent = (ok ? '✓ ' : '! ') + f;
+
+    drawChart();
+
+    /* чипы: только состояние и цены */
+    syncChips($('routeChips'), st.route);
+    syncChips($('kitChips'), st.kit);
+    syncChips($('cellChips'), st.cells);
+    syncChips($('wChips'), st.weight);
+    syncChips($('tripChips'), st.trip);
+    syncChips($('ahChips'), st.ah);
+    var ahBtns = $('ahChips').__btns || [];
+    for (i = 0; i < ahBtns.length; i++) {
+      var a = Number(ahBtns[i].__key), sm = ahBtns[i].querySelector('small');
+      if (sm) setTxt(sm, fmt(LADDER[st.cells][a]) + RUB);
+    }
+
+    /* хватит ли на дорогу */
+    var per = st.trip * 2;
+    var trips = c.range / per, tripsW = c.winter / per;
+    $('tripOut').innerHTML = '<span class="t-per">' + per + ' км в день туда-обратно</span>' +
+      (trips >= 0.95
+        ? 'хватит на <b>' + daysTxt(trips) + '</b> · зимой <b>' + daysTxt(tripsW) + '</b>'
+        : 'запаса не хватает даже на одну поездку — поднимай ёмкость или понизь скорость');
+
+    /* смета */
+    var k = c.k, bp = LADDER[st.cells][st.ah], ins = k.w >= 1000 ? INSTALL_HIGH : INSTALL;
+    $('pKitName').textContent = k.name;
+    $('pKit').textContent = fmt(k.price) + RUB;
+    $('pBatName').textContent = 'АКБ ' + VOLT + ' В ' + st.ah + ' А·ч ' + (st.cells === 'lg' ? 'LG' : 'China');
+    $('pBat').textContent = fmt(bp) + RUB;
+    $('pInsName').textContent = 'Установка' + (k.w >= 1000 ? ' (от 1000 Вт)' : '');
+    $('pIns').textContent = fmt(ins) + RUB;
+    $('pTot').textContent = fmt(k.price + bp + ins) + RUB;
+    $('pNote').textContent = 'в батарее ' + fmt(c.nominal) + ' Вт·ч, полезных ' + fmt(c.usable) +
+      ' — из розетки на полный заряд ≈' + (c.socket / 1000).toFixed(2).replace('.', ',') + ' кВт·ч';
+
+    $('barSub').textContent = ' · ' + st.ah + ' А·ч · ' + route().name;
+  }
+
+  /* ================= события ================= */
+  var dragEnd = 0;
+  $('speed').addEventListener('input', function (e) {
+    var v = Number(e.target.value);
+    if (Math.abs(v - st.speed) >= 3) fireArc(0.85);
+    st.speed = v;
+    A.tau = 0.075;
+    render();
+    clearTimeout(dragEnd);
+    dragEnd = setTimeout(function () { A.tau = 0.16; }, 200);
+    revealNudge();
+  });
+
+  $('gear').addEventListener('click', function () {
+    var ext = $('ext'), open = !ext.classList.contains('open');
+    ext.classList.toggle('open', open);
+    this.setAttribute('aria-expanded', String(open));
+    this.textContent = open ? 'свернуть ▴' : 'настройки ▾';
+    revealNudge();
+  });
+
+  /* копирование расчёта */
+  $('copyBtn').addEventListener('click', function () {
+    var c = calc(), k = c.k, bp = LADDER[st.cells][st.ah];
+    var ins = k.w >= 1000 ? INSTALL_HIGH : INSTALL;
+    var t = 'CITY BIKE · расчёт дальности\n' +
+      VOLT + ' В · ' + st.ah + ' А·ч (' + CELLS[st.cells].name + '), мотор ' + k.w + ' Вт, ' +
+      route().name + ', ' + st.speed + ' км/ч, ' + c.m + ' кг\n' +
+      '→ ' + fmt(c.range) + ' км, ' + fmt1(c.whkm) + ' Вт·ч/км, ' + hm(c.hours) + ' в пути, зимой ' + fmt(c.winter) + ' км\n' +
+      'под ключ ' + fmt(k.price + bp + ins) + ' ₽ (комплект ' + fmt(k.price) + ' + АКБ ' + fmt(bp) + ' + установка ' + fmt(ins) + ')\n' +
+      '+7 913 758-55-71 · @citybike_nsk_bot';
+    var btn = this, old = btn.textContent;
+    function done() { btn.textContent = 'скопировано — вставь в заметки'; setTimeout(function () { btn.textContent = old; }, 1800); }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(t).then(done, fallback);
+    } else fallback();
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = t;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch (e) { void e; }
+      document.body.removeChild(ta);
+      done();
+    }
+  });
+
+  /* ================= старт ================= */
+  buildUi();
+  render();
+  cvFit();
+  window.addEventListener('resize', cvFit);
+  window.addEventListener('orientationchange', function () { setTimeout(cvFit, 250); });
+  (function idleArcs() {
+    setTimeout(function once() {
+      if (!document.hidden) fireArc(0.5 + Math.random() * 0.45);
+      setTimeout(once, 3000 + Math.random() * 4500);
+    }, 1500);
+  })();
+  /* отладочный крючок: /range/panel/index.html?test — снять кадр разряда */
+  if (location.search.indexOf('test') > -1) {
+    window.__panelTest = {
+      arc: function (k, life) {
+        life = life || 2000;
+        fireArc(k || 1);
+        var o = arcs[arcs.length - 1];
+        if (o) { o.life = life; o.t0 = performance.now() - life * 0.3; arcLoop(performance.now()); }
+      },
+      state: function () { return { v: A.v, tgt: A.tgt, max: A.max, n: arcs.length }; },
+      snap: function () { A.v = A.tgt; A.wh = A.twh; A.max = A.tmax; paint(); }
+    };
+  }
+})();
+</script>
+</body>
+</html>
